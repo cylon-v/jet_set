@@ -21,6 +21,7 @@ module JetSet
                      .map{|key| {field: key.to_s.sub(prefix, '').to_sym, value: row[key]}}
       proxy = @proxy_factory.create(object)
       proxy.load_attributes!(attributes)
+      proxy.set_mapping!(entity)
 
       proxy
     end
