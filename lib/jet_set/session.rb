@@ -12,8 +12,8 @@ module JetSet
       @connection[name]
     end
 
-    def execute(sql, &mapping)
-      @connection.fetch(sql).each{|row| mapping.call(row)}
+    def execute(sql, &block)
+      @connection.fetch(sql).map{|row| instance_exec row, &block}
     end
 
     def map(type, row, prefix = '')
@@ -24,6 +24,10 @@ module JetSet
 
     def dirty_objects
       @objects.select{|object| object.dirty?}
+    end
+
+    def flush
+      puts "Session flush. Dirty objects: #{dirty_objects.length}."
     end
   end
 end

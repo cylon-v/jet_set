@@ -1,4 +1,5 @@
 require 'jet_set/attribute'
+require 'sequel'
 require 'sequel/extensions/inflector'
 
 module JetSet
@@ -9,13 +10,15 @@ module JetSet
       @__attributes = []
 
       attributes.each do |attribute|
-        name = attribute[:field] == 'id' ? '@__id' : "@#{attribute[:field]}"
+        name ="@#{attribute[:field]}"
         value = attribute[:value]
         instance_variable_set(name, value)
         @__attributes << Attribute.new(name, value)
       end
+    end
 
-      @__table_name = self.class.name.tableize
+    def set_mapping!(mapping)
+      @mapping = mapping
     end
 
     def dirty?
@@ -35,6 +38,17 @@ module JetSet
     def assign(association_name, association)
       name = "@#{association_name.to_s}"
       instance_variable_set(name, association)
+
+      self
+    end
+
+    def flush
+      if dirty?
+        if @id != nil
+
+        else
+        end
+      end
     end
   end
 end
