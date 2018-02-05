@@ -38,6 +38,9 @@ module JetSet
       end
     end
 
+    ###
+    # Returns pure plain Ruby object without JetSet stuff.
+    ###
     def pure
       object = dup
       object.remove_instance_variable(:@__attributes)
@@ -57,7 +60,6 @@ module JetSet
     def flush
       if dirty?
         if @id != nil
-
         else
         end
       end
