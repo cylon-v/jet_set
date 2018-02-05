@@ -17,8 +17,11 @@ module JetSet
       end
     end
 
-    def set_mapping!(mapping)
-      @mapping = mapping
+    def set_reference!(name, value)
+      instance_variable_set("@#{name}", value)
+
+      @__references ||= {}
+      @__references[name] = value
     end
 
     def dirty?
@@ -35,11 +38,20 @@ module JetSet
       end
     end
 
-    def assign(association_name, association)
-      name = "@#{association_name.to_s}"
-      instance_variable_set(name, association)
+    def pure
+      object = dup
+      object.remove_instance_variable(:@__attributes)
 
-      self
+      if @__references
+        @__references.keys.each do |key|
+          clean = @__references[key].pure
+          object.instance_variable_set("@#{key}", clean)
+        end
+
+        object.remove_instance_variable(:@__references)
+      end
+
+      object
     end
 
     def flush

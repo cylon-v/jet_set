@@ -12,14 +12,16 @@ module JetSet
       @connection[name]
     end
 
-    def execute(sql, &block)
-      @connection.fetch(sql).map{|row| instance_exec row, &block}
+    def execute(sql, params, &block)
+      @connection.fetch(sql, params).map{|row| instance_exec row, &block}
     end
 
     def map(type, row, prefix = '')
-      object = @mapper.map(type, row, prefix)
+      @mapper.map(type, row, self, prefix)
+    end
+
+    def attach(object)
       @objects << object
-      object
     end
 
     def dirty_objects

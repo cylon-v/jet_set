@@ -1,25 +1,27 @@
+require 'jet_set/reference'
+
 module JetSet
   class EntityMapping
-    attr_accessor :has_many, :belongs_to, :fields
+    attr_accessor :references, :collections, :fields
 
     def initialize(&block)
-      @has_many = []
-      @belongs_to = []
+      @references = {}
+      @collections = []
       @fields = []
 
       instance_eval(&block)
     end
 
-    def has_many(name)
-      @has_many << name
-    end
-
-    def belongs_to(name)
-      @belongs_to << name
-    end
-
     def field(name)
-      @fields << name
+      @fields << name.to_s
+    end
+
+    def collection(name)
+      @collections << name
+    end
+
+    def reference(name, attributes = {})
+      @references[name] = Reference.new(name, attributes[:type])
     end
   end
 end
