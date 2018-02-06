@@ -2,17 +2,19 @@ require 'sequel'
 
 module JetSet
   class Session
-    def initialize(connection, mapper)
+    def initialize(connection, mapper, query_parser)
       @connection = connection
       @mapper = mapper
       @objects = []
+      @query_parser = query_parser
     end
 
     def [](name)
       @connection[name]
     end
 
-    def execute(sql, params, &block)
+    def execute(query, params, &block)
+      sql = @query_parser.parse(query)
       @connection.fetch(sql, params).map{|row| instance_exec row, &block}
     end
 
