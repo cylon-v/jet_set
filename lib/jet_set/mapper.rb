@@ -40,5 +40,12 @@ module JetSet
 
       proxy
     end
+
+    def map_association(object, name, rows, session)
+      singular_name = name.to_s.singularize.to_sym
+      entity = @mapping.get(singular_name)
+      result = rows.map{|row| map(entity.type, row, session, '__' + singular_name.to_s)}
+      object.instance_variable_set("@#{name}", result)
+    end
   end
 end

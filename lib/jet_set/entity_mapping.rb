@@ -1,12 +1,14 @@
 require 'jet_set/reference'
+require 'jet_set/collection'
 
 module JetSet
   class EntityMapping
-    attr_accessor :references, :collections, :fields
+    attr_reader :references, :collections, :fields, :type
 
-    def initialize(&block)
+    def initialize(type, &block)
+      @type = type
       @references = {}
-      @collections = []
+      @collections = {}
       @fields = []
 
       instance_eval(&block)
@@ -16,8 +18,8 @@ module JetSet
       @fields << name.to_s
     end
 
-    def collection(name)
-      @collections << name
+    def collection(name, attributes = {})
+      @collections[name] = Collection.new(name, attributes[:type])
     end
 
     def reference(name, attributes = {})

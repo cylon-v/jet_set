@@ -15,11 +15,20 @@ module JetSet
 
     def execute(query, params, &block)
       sql = @query_parser.parse(query)
-      @connection.fetch(sql, params).map{|row| instance_exec row, &block}
+      @connection.fetch(sql, params).map{|row| instance_exec(row, &block)}
     end
 
-    def map(type, row, prefix = '')
-      @mapper.map(type, row, self, prefix)
+    def map(type, row, prefix = '', &block)
+      object = @mapper.map(type, row, self, prefix)
+      instance_exec(object, &block)
+
+      object
+    end
+
+    def preload(object, relation, query, params = {})
+      sql = @query_parser.parse(query)
+      rows = @connection.fetch(sql, params)
+      @mapper.map_association(object, relation, rows, self)
     end
 
     def attach(object)
