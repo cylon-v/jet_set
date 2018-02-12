@@ -17,11 +17,22 @@ module JetSet
       end
     end
 
-    def set_reference!(name, value)
-      instance_variable_set("@#{name}", value)
-
+    def set_reference!(name, value, reverse = false)
       @__references ||= {}
       @__references[name] = value
+
+      #experimental
+      @__reference_reverse ||= {}
+      @__reference_reverse[name] = reverse
+
+      instance_variable_set("@#{name}", value)
+    end
+
+    def set_collection!(name, value)
+      @__collections ||= []
+      @__collections << name
+
+      instance_variable_set("@#{name}", value)
     end
 
     def dirty?
@@ -41,17 +52,26 @@ module JetSet
     ###
     # Returns pure plain Ruby object without JetSet stuff.
     ###
-    def pure
+    def pure(nested = true)
       object = dup
       object.remove_instance_variable(:@__attributes)
 
       if @__references
         @__references.keys.each do |key|
-          clean = @__references[key].pure
+          clean = @__references[key].pure(!@__reference_reverse[key])
           object.instance_variable_set("@#{key}", clean)
         end
-
         object.remove_instance_variable(:@__references)
+      end
+
+      if @__collections && nested
+        @__collections.each do |name|
+          items = object.instance_variable_get("@#{name}")
+          items.each_with_index do |item, index|
+            items[index] = item.pure
+          end
+        end
+        object.remove_instance_variable(:@__collections)
       end
 
       object

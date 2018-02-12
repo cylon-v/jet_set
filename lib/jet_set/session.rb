@@ -1,7 +1,10 @@
 require 'sequel'
+require 'sequel/extensions/inflector'
 
 module JetSet
   class Session
+    Sequel.extension :inflector
+
     def initialize(connection, mapper, query_parser)
       @connection = connection
       @mapper = mapper
@@ -13,22 +16,37 @@ module JetSet
       @connection[name]
     end
 
-    def execute(query, params, &block)
+    def execute(query, params = {}, &block)
       sql = @query_parser.parse(query)
-      @connection.fetch(sql, params).map{|row| instance_exec(row, &block)}
+      rows = @connection.fetch(sql, params).to_a
+
+      if block_given?
+        instance_exec(rows, &block)
+      end
     end
 
-    def map(type, row, prefix = '', &block)
-      object = @mapper.map(type, row, self, prefix)
-      instance_exec(object, &block)
+    def map(type, rows, prefix = '', &block)
+      if rows.length == 1
+        result = @mapper.map(type, rows[0], self, prefix)
+      else
+        result = []
+        rows.each do |row|
+          result << @mapper.map(type, row, self, prefix)
+        end
+      end
 
-      object
+      if block_given?
+        instance_exec(result, &block)
+      end
+
+      result
     end
 
-    def preload(object, relation, query, params = {})
+
+    def preload(target, relation, query, params = {})
       sql = @query_parser.parse(query)
-      rows = @connection.fetch(sql, params)
-      @mapper.map_association(object, relation, rows, self)
+      rows = @connection.fetch(sql, params).to_a
+      @mapper.map_association(target, relation, rows, self)
     end
 
     def attach(object)
@@ -36,7 +54,7 @@ module JetSet
     end
 
     def dirty_objects
-      @objects.select{|object| object.dirty?}
+      @objects.select {|object| object.dirty?}
     end
 
     def flush

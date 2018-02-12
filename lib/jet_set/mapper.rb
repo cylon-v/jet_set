@@ -28,7 +28,6 @@ module JetSet
                      .map {|key| key.split('__')[0]}
                      .uniq
 
-
       reference_names.each do |reference_name|
         if entity.references.key? reference_name.to_sym
           type = entity.references[reference_name.to_sym].type
@@ -41,11 +40,42 @@ module JetSet
       proxy
     end
 
-    def map_association(object, name, rows, session)
+    def map_association(target, name, rows, session)
       singular_name = name.to_s.singularize.to_sym
       entity = @mapping.get(singular_name)
-      result = rows.map{|row| map(entity.type, row, session, '__' + singular_name.to_s)}
-      object.instance_variable_set("@#{name}", result)
+
+      if target.is_a? Array
+        target_name = target[0].class.name.underscore
+        target_reference = entity.references[target_name.to_sym]
+
+        object_id_name = target_name.underscore + '_id'
+        relations = {}
+        rows.each do |row|
+          relation = map(entity.type, row, session, singular_name.to_s)
+          relation.set_reference!(target_reference.name, target[0])
+          object_id = row[object_id_name.to_sym]
+
+          relations[object_id] ||= []
+          relations[object_id] << relation
+        end
+
+        target.each do |object|
+          object_id = object._id
+          object.set_collection!(name, relations[object_id])
+        end
+      else
+        target_name = target.class.name.underscore
+        target_reference = entity.references[target_name.to_sym]
+        result = rows.map do |row|
+          relation = map(entity.type, row, session, singular_name.to_s)
+          relation.set_reference!(target_reference.name, target, true)
+          relation
+        end
+
+        target.set_collection!(name, result)
+      end
+
+      target
     end
   end
 end
