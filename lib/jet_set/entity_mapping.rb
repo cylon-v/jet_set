@@ -9,7 +9,7 @@ module JetSet
       @type = type
       @references = {}
       @collections = {}
-      @fields = []
+      @fields = ['id']
 
       instance_eval(&block)
     end

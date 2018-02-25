@@ -1,6 +1,6 @@
 module JetSet
   class Attribute
-    attr_reader :name
+    attr_reader :name, :value
 
     def initialize(name, value)
       @name = name

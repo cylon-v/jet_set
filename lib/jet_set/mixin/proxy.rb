@@ -12,6 +12,7 @@ module JetSet
       attributes.each do |attribute|
         name ="@#{attribute[:field]}"
         value = attribute[:value]
+        name = '@__id' if name == '@id'
         instance_variable_set(name, value)
         @__attributes << Attribute.new(name, value)
       end
@@ -29,10 +30,14 @@ module JetSet
     end
 
     def set_collection!(name, value)
-      @__collections ||= []
-      @__collections << name
+      @__collections ||= {}
+      @__collections[name] = value
 
       instance_variable_set("@#{name}", value)
+    end
+
+    def new?
+      @__id == nil
     end
 
     def dirty?
@@ -77,10 +82,51 @@ module JetSet
       object
     end
 
-    def flush
+    def flush(connection)
+      table_name = self.class.name.underscore.pluralize
+
       if dirty?
-        if @id != nil
-        else
+        assignments = dirty_attributes.map{|attribute| "#{attribute.name.sub('@', '')} = '#{attribute.value}'"}.join("\n")
+
+        sql = <<~SQL
+            UPDATE #{table_name}
+            SET #{assignments}
+            WHERE id = #{@__id}
+        SQL
+
+        p connection.run(sql)
+      end
+
+      if new?
+        fields = dirty_attributes.map{|attribute| attribute.name.sub('@', '')}.join(', ')
+        values = dirty_attributes.map{|attribute| "'#{attribute.value}'"}.join(', ')
+
+        sql = <<~SQL
+            INSERT INTO #{table_name} (#{fields})
+            VALUES (#{values})
+        SQL
+        p connection.run(sql)
+      end
+
+      @__collections.keys.each do |name|
+        initial_state = @__collections[name]
+        current_state = instance_variable_get("@#{name}")
+
+        to_delete = initial_state - current_state
+        to_insert = current_state.select{|item| item.__id.nil?}
+
+        if to_delete.length > 0
+          ids = to_delete.map{|item| item.__id}.join(', ')
+          sql = <<~SQL
+            DELETE FROM #{table_name}
+            WHERE id IN (#{ids})
+          SQL
+
+          connection.run(sql)
+        end
+
+        if to_insert.length > 0
+          to_insert.each{|item| item.flush}
         end
       end
     end

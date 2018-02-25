@@ -1,10 +1,10 @@
 module JetSet
   module Identity
     def ==(object)
-      self.class.name == object.class.name && @__id == object._id
+      self.class.name == object.class.name && @__id == object.__id
     end
 
-    def _id
+    def __id
       @__id
     end
   end
