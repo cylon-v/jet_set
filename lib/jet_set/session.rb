@@ -42,7 +42,6 @@ module JetSet
       result
     end
 
-
     def preload(target, relation, query, params = {})
       sql = @query_parser.parse(query)
       rows = @connection.fetch(sql, params).to_a

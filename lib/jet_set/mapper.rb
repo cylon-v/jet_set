@@ -5,16 +5,21 @@ module JetSet
   class Mapper
     Sequel.extension :inflector
 
-    def initialize(proxy_factory, mapping)
+    def initialize(proxy_factory, mapping, container)
       @proxy_factory = proxy_factory
       @mapping = mapping
+      @container = container
+
+      @mapping.entity_mappings.values.each do |entity_mapping|
+        container.register(entity_mapping.type)
+      end
     end
 
     def map(type, row, session, prefix = '')
       entity_name = type.name.underscore.to_sym
       entity = @mapping.get(entity_name)
 
-      object = type.new({})
+      object = @container.resolve(entity_name)
 
       keys = row.keys.map{|key| key.to_s}
       attributes =  keys.select {|key| key.to_s.start_with? prefix + '__'}

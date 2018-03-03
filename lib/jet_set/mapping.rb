@@ -5,6 +5,8 @@ module JetSet
   class Mapping
     Sequel.extension :inflector
 
+    attr_reader :entity_mappings
+
     def initialize(&block)
       @entity_mappings = {}
       instance_eval(&block)
