@@ -1,11 +1,9 @@
 module JetSet
   module Identity
-    def ==(object)
-      self.class.name == object.class.name && @__id == object.__id
-    end
+    attr_reader :id
 
-    def __id
-      @__id
+    def ==(object)
+      self.class.name == object.class.name && @id == object.id
     end
   end
 end

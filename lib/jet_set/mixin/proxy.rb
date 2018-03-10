@@ -12,7 +12,6 @@ module JetSet
       attributes.each do |attribute|
         name ="@#{attribute[:field]}"
         value = attribute[:value]
-        name = '@__id' if name == '@id'
         instance_variable_set(name, value)
         @__attributes << Attribute.new(name, value)
       end
