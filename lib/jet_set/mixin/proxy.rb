@@ -36,7 +36,7 @@ module JetSet
     end
 
     def new?
-      @__id == nil
+      @id == nil
     end
 
     def dirty?
@@ -90,7 +90,7 @@ module JetSet
         sql = <<~SQL
             UPDATE #{table_name}
             SET #{assignments}
-            WHERE id = #{@__id}
+            WHERE id = #{@id}
         SQL
 
         p connection.run(sql)
@@ -112,10 +112,10 @@ module JetSet
         current_state = instance_variable_get("@#{name}")
 
         to_delete = initial_state - current_state
-        to_insert = current_state.select{|item| item.__id.nil?}
+        to_insert = current_state.select{|item| item.id.nil?}
 
         if to_delete.length > 0
-          ids = to_delete.map{|item| item.__id}.join(', ')
+          ids = to_delete.map{|item| item.id}.join(', ')
           sql = <<~SQL
             DELETE FROM #{table_name}
             WHERE id IN (#{ids})
