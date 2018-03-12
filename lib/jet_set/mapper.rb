@@ -26,7 +26,7 @@ module JetSet
                      .select {|key| entity.fields.include? key.sub(prefix + '__', '')}
                      .map {|key| {field: key.sub(prefix + '__', ''), value: row[key.to_sym]}}
 
-      proxy = @proxy_factory.create(object)
+      proxy = @proxy_factory.create(object, @mapping)
       proxy.load_attributes!(attributes)
 
       reference_names = keys.select {|key| !key.start_with?(prefix) && key.include?('__')}
@@ -41,7 +41,6 @@ module JetSet
       end
 
       session.attach(proxy)
-
       proxy
     end
 
@@ -65,7 +64,7 @@ module JetSet
         end
 
         target.each do |object|
-          object_id = object._id
+          object_id = object.id
           object.set_collection!(name, relations[object_id])
         end
       else

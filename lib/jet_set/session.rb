@@ -5,11 +5,12 @@ module JetSet
   class Session
     Sequel.extension :inflector
 
-    def initialize(connection, mapper, query_parser)
+    def initialize(connection, mapper, query_parser, proxy_factory)
       @connection = connection
       @mapper = mapper
       @objects = []
       @query_parser = query_parser
+      @proxy_factory = proxy_factory
     end
 
     def [](name)
@@ -56,9 +57,13 @@ module JetSet
       @objects.select {|object| object.dirty?}
     end
 
+    def new_objects
+      @objects.select {|object| object.new?}
+    end
+
     def flush
-      dirty_objects.each{|o| o.flush(@connection)}
       puts "Session flush. Dirty objects: #{dirty_objects.length}."
+      dirty_objects.each{|obj| obj.flush(@connection)}
     end
   end
 end

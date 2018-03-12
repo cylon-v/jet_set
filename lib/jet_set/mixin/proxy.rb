@@ -7,8 +7,6 @@ module JetSet
     Sequel.extension :inflector
 
     def load_attributes!(attributes)
-      @__attributes = []
-
       attributes.each do |attribute|
         name ="@#{attribute[:field]}"
         value = attribute[:value]
@@ -18,7 +16,6 @@ module JetSet
     end
 
     def set_reference!(name, value, reverse = false)
-      @__references ||= {}
       @__references[name] = value
 
       #experimental
@@ -29,7 +26,6 @@ module JetSet
     end
 
     def set_collection!(name, value)
-      @__collections ||= {}
       @__collections[name] = value
 
       instance_variable_set("@#{name}", value)
@@ -53,58 +49,46 @@ module JetSet
       end
     end
 
-    ###
-    # Returns pure plain Ruby object without JetSet stuff.
-    ###
-    def pure(nested = true)
-      object = dup
-      object.remove_instance_variable(:@__attributes)
-
-      if @__references
-        @__references.keys.each do |key|
-          clean = @__references[key].pure(!@__reference_reverse[key])
-          object.instance_variable_set("@#{key}", clean)
+    def flush(connection)
+      table_name = self.class.name.underscore.pluralize.to_sym
+      table = connection[table_name]
+      entity_name = self.class.name.underscore.to_sym
+      entity = @__mapping.get(entity_name)
+      if new?
+        attributes = []
+        entity.fields.each do |field|
+          attributes << {field: field, value: instance_variable_get("@#{field}")}
         end
-        object.remove_instance_variable(:@__references)
-      end
 
-      if @__collections && nested
-        @__collections.each do |name|
-          items = object.instance_variable_get("@#{name}")
-          items.each_with_index do |item, index|
-            items[index] = item.pure
+        load_attributes!(attributes)
+
+        fields = @__attributes.map{|attribute| attribute.name.sub('@', '')}
+                   .select{|a| a != 'id'}
+
+        values = @__attributes.select{|attribute| attribute.name.sub('@', '') != 'id'}
+                   .map{|a| a.value}
+
+        entity.references.keys.each do |key|
+          value = instance_variable_get("@#{key}")
+          if value
+            set_reference!(key, value)
+            fields << "#{key}_id"
+            values << value.instance_variable_get('@id')
           end
         end
-        object.remove_instance_variable(:@__collections)
+
+        @id = table.insert(fields, values)
+      elsif dirty?
+        attributes = {}
+        dirty_attributes.each{|attribute| attributes[attribute.name.sub('@', '')] = attribute.value}
+        table.where(id: @id).update(attributes)
       end
 
-      object
-    end
-
-    def flush(connection)
-      table_name = self.class.name.underscore.pluralize
-
-      if dirty?
-        assignments = dirty_attributes.map{|attribute| "#{attribute.name.sub('@', '')} = '#{attribute.value}'"}.join("\n")
-
-        sql = <<~SQL
-            UPDATE #{table_name}
-            SET #{assignments}
-            WHERE id = #{@id}
-        SQL
-
-        p connection.run(sql)
-      end
-
-      if new?
-        fields = dirty_attributes.map{|attribute| attribute.name.sub('@', '')}.join(', ')
-        values = dirty_attributes.map{|attribute| "'#{attribute.value}'"}.join(', ')
-
-        sql = <<~SQL
-            INSERT INTO #{table_name} (#{fields})
-            VALUES (#{values})
-        SQL
-        p connection.run(sql)
+      # synchronize collections
+      entity.collections.keys.each do |key|
+        unless @__collections.key? key
+          set_collection!(key, instance_variable_get("@#{key}"))
+        end
       end
 
       @__collections.keys.each do |name|
@@ -112,20 +96,18 @@ module JetSet
         current_state = instance_variable_get("@#{name}")
 
         to_delete = initial_state - current_state
-        to_insert = current_state.select{|item| item.id.nil?}
+        to_insert = current_state.select{|item| !item.respond_to?(:id)}
 
         if to_delete.length > 0
           ids = to_delete.map{|item| item.id}.join(', ')
-          sql = <<~SQL
-            DELETE FROM #{table_name}
-            WHERE id IN (#{ids})
-          SQL
-
-          connection.run(sql)
+          table.where(id: ids).delete
         end
 
         if to_insert.length > 0
-          to_insert.each{|item| item.flush}
+          to_insert.each do |item|
+            @__factory.create(item, @__mapping)
+            item.flush(connection)
+          end
         end
       end
     end

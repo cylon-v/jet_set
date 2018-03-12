@@ -1,4 +1,5 @@
 require 'hypo'
+require 'sequel'
 require 'jet_set/version'
 require 'jet_set/mapper'
 require 'jet_set/proxy_factory'
@@ -8,7 +9,10 @@ require 'jet_set/entity_mapping'
 require 'jet_set/query_parser'
 
 module JetSet
-  def self.init(mapping, container = Hypo::Container.new)
+  def self.init(mapping, connection_string, container = Hypo::Container.new)
+    @connection = Sequel.connect(connection_string)
+    @connection.logger = Logger.new($stdout)
+
     @container = container
     @container.register_instance(mapping, :mapping)
 
@@ -22,8 +26,8 @@ module JetSet
       .using_lifetime(:singleton)
   end
 
-  def self.register_session(connection, scope = nil)
-    @container.register_instance(connection, :connection)
+  def self.register_session(scope = nil)
+    @container.register_instance(@connection, :connection)
     session_component = @container.register(JetSet::Session, :session)
 
     if scope.nil?
@@ -35,8 +39,8 @@ module JetSet
     end
   end
 
-  def self.open_session(connection, scope = nil)
-    register_session(connection, scope)
+  def self.open_session(scope = nil)
+    register_session(scope)
     @container.resolve(:session)
   end
 end
