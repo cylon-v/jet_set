@@ -63,7 +63,9 @@ module JetSet
 
     def flush
       puts "Session flush. Dirty objects: #{dirty_objects.length}."
-      dirty_objects.each{|obj| obj.flush(@connection)}
+      @connection.transaction do
+        dirty_objects.each{|obj| obj.flush(@connection)}
+      end
     end
   end
 end

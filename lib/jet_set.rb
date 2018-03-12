@@ -10,8 +10,7 @@ require 'jet_set/query_parser'
 
 module JetSet
   def self.init(mapping, connection_string, container = Hypo::Container.new)
-    @connection = Sequel.connect(connection_string)
-    @connection.logger = Logger.new($stdout)
+    @connection_string = connection_string
 
     @container = container
     @container.register_instance(mapping, :mapping)
@@ -27,7 +26,10 @@ module JetSet
   end
 
   def self.register_session(scope = nil)
-    @container.register_instance(@connection, :connection)
+    connection = Sequel.connect(@connection_string)
+    connection.logger = Logger.new($stdout)
+
+    @container.register_instance(connection, :connection)
     session_component = @container.register(JetSet::Session, :session)
 
     if scope.nil?

@@ -36,10 +36,26 @@ module JetSet
     end
 
     def dirty?
-      @__attributes.any? do |attribute|
+      attributes_changed = @__attributes.any? do |attribute|
         current_value = instance_variable_get(attribute.name)
         attribute.changed?(current_value)
       end
+
+      collections_changed = @__collections.keys.any? do |name|
+        initial_state = @__collections[name]
+        current_state = instance_variable_get("@#{name}")
+        to_delete = initial_state - current_state
+        to_insert = current_state.select{|item| !item.respond_to?(:id)}
+        to_insert.length > 0 || to_delete.length > 0
+      end
+
+      references_changed = @__references.keys.any? do |name|
+        initial_state = @__references[name]
+        current_state = instance_variable_get("@#{name}")
+        current_state != initial_state
+      end
+
+      attributes_changed || references_changed || collections_changed
     end
 
     def dirty_attributes
@@ -81,7 +97,9 @@ module JetSet
       elsif dirty?
         attributes = {}
         dirty_attributes.each{|attribute| attributes[attribute.name.sub('@', '')] = attribute.value}
-        table.where(id: @id).update(attributes)
+        if attributes.keys.length > 0
+          table.where(id: @id).update(attributes)
+        end
       end
 
       # synchronize collections
