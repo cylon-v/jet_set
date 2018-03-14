@@ -1,5 +1,6 @@
 require 'sequel'
 require 'sequel/extensions/inflector'
+require 'jet_set/mapper_error'
 
 module JetSet
   class Mapper
@@ -52,12 +53,16 @@ module JetSet
         target_name = target[0].class.name.underscore
         target_reference = entity.references[target_name.to_sym]
 
-        object_id_name = target_name.underscore + '_id'
+        object_id_name = "#{target_name.underscore}_id"
         relations = {}
         rows.each do |row|
           relation = map(entity.type, row, session, singular_name.to_s)
           relation.set_reference!(target_reference.name, target[0])
           object_id = row[object_id_name.to_sym]
+
+          if object_id.nil?
+            raise MapperError, "Field \"#{object_id_name}\" is not defined in the query but it's required to construct \"#{name} to #{target_name}\" association. Just add it to SELECT clause."
+          end
 
           relations[object_id] ||= []
           relations[object_id] << relation
@@ -67,6 +72,8 @@ module JetSet
           object_id = object.id
           object.set_collection!(name, relations[object_id])
         end
+
+        {result: relations, ids: relations.keys}
       else
         target_name = target.class.name.underscore
         target_reference = entity.references[target_name.to_sym]
@@ -77,9 +84,10 @@ module JetSet
         end
 
         target.set_collection!(name, result)
+
+        {result: result, ids: result.map{|i| i.id}}
       end
 
-      target
     end
   end
 end

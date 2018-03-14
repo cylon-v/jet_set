@@ -43,10 +43,14 @@ module JetSet
       result
     end
 
-    def preload(target, relation, query, params = {})
+    def preload(target, relation, query, params = {}, &block)
       sql = @query_parser.parse(query)
       rows = @connection.fetch(sql, params).to_a
-      @mapper.map_association(target, relation, rows, self)
+      result = @mapper.map_association(target, relation, rows, self)
+
+      if block_given?
+        instance_exec(result[:result], result[:ids], &block)
+      end
     end
 
     def attach(object)

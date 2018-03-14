@@ -26,7 +26,7 @@ module JetSet
     end
 
     def set_collection!(name, value)
-      @__collections[name] = value
+      @__collections[name] = value.map{|item| item.respond_to?(:id) ? item.id : nil}
 
       instance_variable_set("@#{name}", value)
     end
@@ -113,12 +113,12 @@ module JetSet
         initial_state = @__collections[name]
         current_state = instance_variable_get("@#{name}")
 
-        to_delete = initial_state - current_state
+        to_delete = initial_state.select{|item| !item.nil?} - current_state.select{|item| item.respond_to?(:id)}.map{|item| item.id}
         to_insert = current_state.select{|item| !item.respond_to?(:id)}
 
         if to_delete.length > 0
-          ids = to_delete.map{|item| item.id}.join(', ')
-          table.where(id: ids).delete
+          ids = to_delete.join(', ')
+          connection[name].where(id: ids).delete
         end
 
         if to_insert.length > 0
