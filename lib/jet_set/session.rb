@@ -7,7 +7,10 @@ module JetSet
     # +connection+:: Sequel connection object.
     # +mapper+:: Sequel rows to Ruby objects mapper.
     # +query_parser+:: a parser which evaluates JetSet extensions in SQL-expressions.
-    def initialize(connection, mapper, query_parser, proxy_factory)
+    def initialize(connection_string, mapper, query_parser, proxy_factory)
+      connection = Sequel.connect(connection_string)
+      connection.logger = Logger.new($stdout)
+
       @connection = connection
       @mapper = mapper
       @objects = []
