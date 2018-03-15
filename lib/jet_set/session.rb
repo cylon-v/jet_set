@@ -79,12 +79,16 @@ module JetSet
       @objects << object
     end
 
-    # Saves all changes of attached object to the database and close the connection.
+    # Saves all changes of attached objects to the database and close the connection.
     def finalize
       dirty_objects = @objects.select {|object| object.dirty?}
-      @connection.transaction do
-        dirty_objects.each{|obj| obj.flush(@connection)}
+
+      if dirty_objects.length > 0
+        @connection.transaction do
+          dirty_objects.each{|obj| obj.flush(@connection)}
+        end
       end
+
       @connection.disconnect
     end
   end
