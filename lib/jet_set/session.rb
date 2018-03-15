@@ -1,10 +1,12 @@
 require 'sequel'
-require 'sequel/extensions/inflector'
 
 module JetSet
   class Session
-    Sequel.extension :inflector
-
+    # Initializes +Session+ object.
+    # Params:
+    # +connection+:: Sequel connection object.
+    # +mapper+:: Sequel rows to Ruby objects mapper.
+    # +query_parser+:: a parser which evaluates JetSet extensions in SQL-expressions.
     def initialize(connection, mapper, query_parser, proxy_factory)
       @connection = connection
       @mapper = mapper
@@ -13,10 +15,11 @@ module JetSet
       @proxy_factory = proxy_factory
     end
 
-    def [](name)
-      @connection[name]
-    end
-
+    # Executes SQL-like query for further mapping.
+    # Params:
+    # +query+:: SQL-like query
+    # +params+:: +query+ params
+    # +&block+:: +Proc+ object that maps returning result using +map+ and +preload+ methods.
     def execute(query, params = {}, &block)
       sql = @query_parser.parse(query)
       rows = @connection.fetch(sql, params).to_a
@@ -26,7 +29,14 @@ module JetSet
       end
     end
 
-    def map(type, rows, prefix = '', &block)
+    # Maps root entity using a result of +execute+ method.
+    # Params:
+    # +type+:: Ruby class of an object to map.
+    # +rows+:: an array of rows returned by +execute+ method.
+    # +prefix+:: (optional) a prefix for extracting the object
+    #            fields like "guest" for parsing "SELECT u.id AS guest__id ...".
+    # +&block+:: further handling of the result.
+    def map(type, rows, prefix = type.name.underscore, &block)
       if rows.length == 1
         result = @mapper.map(type, rows[0], self, prefix)
       else
@@ -43,6 +53,11 @@ module JetSet
       result
     end
 
+    # Loads nested references and collections using sub-query
+    # for previously loaded aggregation root, see +map+ method.
+    # Params:
+    # +target+:: single or multiple entities that are a Ruby objects constructed by +map+ or +preload+ method.
+    # +relation+:: an object reference or collection name defined in JetSet mapping for the +target+.
     def preload(target, relation, query, params = {}, &block)
       sql = @query_parser.parse(query)
       rows = @connection.fetch(sql, params).to_a
@@ -53,23 +68,24 @@ module JetSet
       end
     end
 
+    # Makes an object to be tracked by the session.
+    # Since this moment all related to object changes will be saved on session finalization.
+    # Use this method for newly created aggregation roots. No need to use it for new objects
+    # that were bound to a root which is already attached. All objects loaded from the database
+    # are already under the session tracking.
+    # Params:
+    # +object+:: any Ruby object defined in the mapping.
     def attach(object)
       @objects << object
     end
 
-    def dirty_objects
-      @objects.select {|object| object.dirty?}
-    end
-
-    def new_objects
-      @objects.select {|object| object.new?}
-    end
-
-    def flush
-      puts "Session flush. Dirty objects: #{dirty_objects.length}."
+    # Saves all changes of attached object to the database and close the connection.
+    def finalize
+      dirty_objects = @objects.select {|object| object.dirty?}
       @connection.transaction do
         dirty_objects.each{|obj| obj.flush(@connection)}
       end
+      @connection.disconnect
     end
   end
 end

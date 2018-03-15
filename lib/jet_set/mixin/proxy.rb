@@ -3,9 +3,8 @@ require 'sequel'
 require 'sequel/extensions/inflector'
 
 module JetSet
+  Sequel.extension :inflector
   module Proxy
-    Sequel.extension :inflector
-
     def load_attributes!(attributes)
       attributes.each do |attribute|
         name ="@#{attribute[:field]}"
