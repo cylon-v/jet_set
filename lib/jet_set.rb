@@ -9,11 +9,14 @@ require 'jet_set/entity_mapping'
 require 'jet_set/query_parser'
 
 module JetSet
-  def self.init(mapping, connection_string, container = Hypo::Container.new)
+  # Initializes JetSet environment.
+  # Params:
+  # +mapping+:: JetSet mapping definition. Instance of JetSet::Mapping class.
+  # +container+:: (optional) Existing Hypo::Container instance.
+  def self.init(mapping, container = Hypo::Container.new)
     @container = container
 
     @container.register_instance(mapping, :mapping)
-    @container.register_instance(connection_string, :connection_string)
 
     @container.register(JetSet::ProxyFactory, :proxy_factory)
       .using_lifetime(:singleton)
@@ -25,6 +28,9 @@ module JetSet
       .using_lifetime(:singleton)
   end
 
+  # Creates JetSet session and registers it in Hypo container.
+  # Params:
+  # +scope+:: a name of registered component which manages the session lifetime.
   def self.register_session(scope = nil)
     session_component = @container.register(JetSet::Session, :session)
 
@@ -37,7 +43,14 @@ module JetSet
     end
   end
 
-  def self.open_session(scope = nil)
+  # Creates JetSet session and registers it in Hypo container.
+  # Params:
+  # +connection+:: Sequel connection.
+  # +scope+:: a name of registered component which manages the session lifetime.
+  # Returns the session object.
+  def self.open_session(connection, scope = nil)
+    @container.register_instance(connection, :connection)
+
     register_session(scope)
     @container.resolve(:session)
   end

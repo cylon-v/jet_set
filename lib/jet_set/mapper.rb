@@ -16,6 +16,11 @@ module JetSet
       end
     end
 
+    def entity_mapping(object)
+      entity_name = object.class.name.underscore.to_sym
+      @mapping.get(entity_name)
+    end
+
     def map(type, row, session, prefix = '')
       entity_name = type.name.underscore.to_sym
       entity = @mapping.get(entity_name)
@@ -27,7 +32,7 @@ module JetSet
                      .select {|key| entity.fields.include? key.sub(prefix + '__', '')}
                      .map {|key| {field: key.sub(prefix + '__', ''), value: row[key.to_sym]}}
 
-      proxy = @proxy_factory.create(object, @mapping)
+      proxy = @proxy_factory.create(object)
       proxy.load_attributes!(attributes)
 
       reference_names = keys.select {|key| !key.start_with?(prefix) && key.include?('__')}

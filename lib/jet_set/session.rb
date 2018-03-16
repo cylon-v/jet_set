@@ -7,10 +7,7 @@ module JetSet
     # +connection+:: Sequel connection object.
     # +mapper+:: Sequel rows to Ruby objects mapper.
     # +query_parser+:: a parser which evaluates JetSet extensions in SQL-expressions.
-    def initialize(connection_string, mapper, query_parser, proxy_factory)
-      connection = Sequel.connect(connection_string)
-      connection.logger = Logger.new($stdout)
-
+    def initialize(connection, mapper, query_parser, proxy_factory)
       @connection = connection
       @mapper = mapper
       @objects = []
@@ -40,7 +37,9 @@ module JetSet
     #            fields like "guest" for parsing "SELECT u.id AS guest__id ...".
     # +&block+:: further handling of the result.
     def map(type, rows, prefix = type.name.underscore, &block)
-      if rows.length == 1
+      if rows.length == 0
+        result = nil
+      elsif rows.length == 1
         result = @mapper.map(type, rows[0], self, prefix)
       else
         result = []
@@ -79,10 +78,11 @@ module JetSet
     # Params:
     # +object+:: any Ruby object defined in the mapping.
     def attach(object)
-      @objects << object
+      obj = object.kind_of?(Proxy) ? object : @proxy_factory.create(object)
+      @objects << obj
     end
 
-    # Saves all changes of attached objects to the database and close the connection.
+    # Saves all changes of attached objects to the database.
     def finalize
       dirty_objects = @objects.select {|object| object.dirty?}
 
@@ -91,8 +91,6 @@ module JetSet
           dirty_objects.each{|obj| obj.flush(@connection)}
         end
       end
-
-      @connection.disconnect
     end
   end
 end

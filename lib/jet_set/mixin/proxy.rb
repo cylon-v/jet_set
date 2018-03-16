@@ -10,7 +10,7 @@ module JetSet
         name ="@#{attribute[:field]}"
         value = attribute[:value]
         instance_variable_set(name, value)
-        @__attributes << Attribute.new(name, value)
+        @__attributes[name] = Attribute.new(name, value)
       end
     end
 
@@ -31,11 +31,12 @@ module JetSet
     end
 
     def new?
-      @id == nil
+      @id.nil?
     end
 
     def dirty?
-      attributes_changed = @__attributes.any? do |attribute|
+      attributes_changed = @__attributes.keys.any? do |name|
+        attribute = @__attributes[name]
         current_value = instance_variable_get(attribute.name)
         attribute.changed?(current_value)
       end
@@ -54,14 +55,14 @@ module JetSet
         current_state != initial_state
       end
 
-      attributes_changed || references_changed || collections_changed
+      attributes_changed || references_changed || collections_changed || new?
     end
 
     def dirty_attributes
-      @__attributes.select do |attribute|
-        current_value = instance_variable_get(attribute.name)
-        attribute.changed?(current_value)
-      end
+      @__attributes.keys.select{|name|
+        current_value = instance_variable_get(name)
+        @__attributes[name].changed?(current_value)
+      }.map{|name| @__attributes[name]}
     end
 
     def flush(connection)
@@ -69,6 +70,7 @@ module JetSet
       table = connection[table_name]
       entity_name = self.class.name.underscore.to_sym
       entity = @__mapping.get(entity_name)
+
       if new?
         attributes = []
         entity.fields.each do |field|
@@ -77,11 +79,8 @@ module JetSet
 
         load_attributes!(attributes)
 
-        fields = @__attributes.map{|attribute| attribute.name.sub('@', '')}
-                   .select{|a| a != 'id'}
-
-        values = @__attributes.select{|attribute| attribute.name.sub('@', '') != 'id'}
-                   .map{|a| a.value}
+        fields = @__attributes.keys.map{|name| name.sub('@', '')}.select{|a| a != 'id'}
+        values = @__attributes.keys.select{|name| name.sub('@', '') != 'id'}.map{|name| @__attributes[name].value}
 
         entity.references.keys.each do |key|
           value = instance_variable_get("@#{key}")
@@ -91,11 +90,11 @@ module JetSet
             values << value.instance_variable_get('@id')
           end
         end
-
-        @id = table.insert(fields, values)
+        new_id = table.insert(fields, values)
+        @__attributes['id'] = Attribute.new('@id', new_id)
       elsif dirty?
         attributes = {}
-        dirty_attributes.each{|attribute| attributes[attribute.name.sub('@', '')] = attribute.value}
+        dirty_attributes.each{|attribute| attributes[attribute.name.sub('@', '')] = instance_variable_get(attribute.name)}
         if attributes.keys.length > 0
           table.where(id: @id).update(attributes)
         end
@@ -122,7 +121,7 @@ module JetSet
 
         if to_insert.length > 0
           to_insert.each do |item|
-            @__factory.create(item, @__mapping)
+            @__factory.create(item)
             item.flush(connection)
           end
         end
