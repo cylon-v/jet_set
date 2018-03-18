@@ -25,7 +25,7 @@ module JetSet
 
     def reference(name, attributes = {})
       @references[name] = Reference.new(name, attributes[:type])
-      # @dependencies << attributes[:type]
+      @dependencies << attributes[:type] unless attributes[:weak]
     end
   end
 end

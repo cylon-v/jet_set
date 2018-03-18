@@ -27,9 +27,6 @@ module JetSet
 
     @container.register(JetSet::QueryParser, :query_parser)
       .using_lifetime(:singleton)
-
-    @container.register(JetSet::DependencyGraph, :dependency_graph)
-      .using_lifetime(:transient)
   end
 
   # Creates JetSet session and registers it in Hypo container.
@@ -37,14 +34,18 @@ module JetSet
   # +scope+:: a name of registered component which manages the session lifetime.
   def self.register_session(scope = nil)
     session_component = @container.register(JetSet::Session, :session)
+    dependency_graph_component = @container.register(JetSet::DependencyGraph, :dependency_graph)
 
     if scope.nil?
       @container.register_instance(nil, :session_scope)
       session_component.use_lifetime(:transient)
+      dependency_graph_component.use_lifetime(:transient)
     else
       @container.register_instance(scope, :session_scope)
       session_component.use_lifetime(:scope).bind_to(scope)
+      dependency_graph_component.use_lifetime(:scope).bind_to(scope)
     end
+
   end
 
   # Creates JetSet session and registers it in Hypo container.

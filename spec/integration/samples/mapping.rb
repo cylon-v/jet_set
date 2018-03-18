@@ -12,7 +12,7 @@ class Mapping
         field :last_name
         collection :subscriptions, type: Subscription
         collection :invoices, type: Invoice
-        reference :plan, type: Plan
+        reference :plan, type: Plan, weak: true
       end
 
       entity Invoice do

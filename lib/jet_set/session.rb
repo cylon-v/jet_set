@@ -96,6 +96,7 @@ module JetSet
 
     # Saves all changes of attached objects to the database.
     def finalize
+
       dirty_objects = @objects.select {|object| object.dirty?}
 
       if dirty_objects.length > 0
