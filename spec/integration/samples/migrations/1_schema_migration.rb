@@ -13,26 +13,27 @@ Sequel.migration do
       Integer :subscription_id
       DateTime :created_at
       Boolean :paid
-      Double :amount
+      Decimal :amount
     end
 
     create_table(:line_items) do
       primary_key :id
       Integer :invoice_id
       DateTime :created_at
-      Double :price
+      Integer :quantity
+      Decimal :price
     end
 
     create_table(:plans) do
       primary_key :id
       String :name
-      Double :price
+      Decimal :price
     end
 
     create_table(:subscriptions) do
       primary_key :id
       Integer :plan_id
-      Integer :user_id
+      Integer :customer_id
       Boolean :active
       DateTime :started_at
     end

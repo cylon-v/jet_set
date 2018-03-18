@@ -7,12 +7,13 @@ module JetSet
     # +connection+:: Sequel connection object.
     # +mapper+:: Sequel rows to Ruby objects mapper.
     # +query_parser+:: a parser which evaluates JetSet extensions in SQL-expressions.
-    def initialize(connection, mapper, query_parser, proxy_factory)
+    def initialize(connection, mapper, query_parser, proxy_factory, dependency_graph)
       @connection = connection
       @mapper = mapper
       @objects = []
       @query_parser = query_parser
       @proxy_factory = proxy_factory
+      @dependency_graph = dependency_graph
     end
 
     # Executes SQL-like query for further mapping.
@@ -77,9 +78,20 @@ module JetSet
     # are already under the session tracking.
     # Params:
     # +object+:: any Ruby object defined in the mapping.
-    def attach(object)
-      obj = object.kind_of?(Proxy) ? object : @proxy_factory.create(object)
-      @objects << obj
+    def attach(*objects)
+      to_attach = []
+      objects.each do |object|
+        if object.is_a? Array
+          object.each{|o| to_attach << o}
+        else
+          to_attach << object
+        end
+      end
+
+      to_attach.each do |object|
+        obj = object.kind_of?(Proxy) ? object : @proxy_factory.create(object)
+        @objects << obj
+      end
     end
 
     # Saves all changes of attached objects to the database.

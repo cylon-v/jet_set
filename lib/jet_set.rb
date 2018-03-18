@@ -7,6 +7,7 @@ require 'jet_set/session'
 require 'jet_set/mapping'
 require 'jet_set/entity_mapping'
 require 'jet_set/query_parser'
+require 'jet_set/dependency_graph'
 
 module JetSet
   # Initializes JetSet environment.
@@ -26,6 +27,9 @@ module JetSet
 
     @container.register(JetSet::QueryParser, :query_parser)
       .using_lifetime(:singleton)
+
+    @container.register(JetSet::DependencyGraph, :dependency_graph)
+      .using_lifetime(:transient)
   end
 
   # Creates JetSet session and registers it in Hypo container.

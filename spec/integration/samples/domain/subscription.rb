@@ -5,12 +5,16 @@ class Subscription
     @started_at = Date.today
     @active = false
     @plan = attrs[:plan]
-    @user = attrs[:user]
+    @customer = attrs[:customer]
     @extensions = []
   end
 
 
   def add_extension(extension)
     @extensions << extension
+  end
+
+  def activate
+    @active = true
   end
 end

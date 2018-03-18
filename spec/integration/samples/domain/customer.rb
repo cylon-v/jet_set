@@ -7,4 +7,8 @@ class Customer
     @invoices = []
     @subscriptions = []
   end
+
+  def add_invoice(invoice)
+    @invoices << invoice
+  end
 end

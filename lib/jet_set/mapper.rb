@@ -55,27 +55,31 @@ module JetSet
       entity = @mapping.get(singular_name)
 
       if target.is_a? Array
-        target_name = target[0].class.name.underscore
-        target_reference = entity.references[target_name.to_sym]
-
-        object_id_name = "#{target_name.underscore}_id"
         relations = {}
-        rows.each do |row|
-          relation = map(entity.type, row, session, singular_name.to_s)
-          relation.set_reference!(target_reference.name, target[0])
-          object_id = row[object_id_name.to_sym]
 
-          if object_id.nil?
-            raise MapperError, "Field \"#{object_id_name}\" is not defined in the query but it's required to construct \"#{name} to #{target_name}\" association. Just add it to SELECT clause."
+        if rows.length > 0
+          target_name = target[0].class.name.underscore
+          target_reference = entity.references[target_name.to_sym]
+
+          object_id_name = "#{target_name.underscore}_id"
+
+          rows.each do |row|
+            relation = map(entity.type, row, session, singular_name.to_s)
+            relation.set_reference!(target_reference.name, target[0])
+            object_id = row[object_id_name.to_sym]
+
+            if object_id.nil?
+              raise MapperError, "Field \"#{object_id_name}\" is not defined in the query but it's required to construct \"#{name} to #{target_name}\" association. Just add it to SELECT clause."
+            end
+
+            relations[object_id] ||= []
+            relations[object_id] << relation
           end
 
-          relations[object_id] ||= []
-          relations[object_id] << relation
-        end
-
-        target.each do |object|
-          object_id = object.id
-          object.set_collection!(name, relations[object_id])
+          target.each do |entry|
+            object_id = entry.id
+            entry.set_collection!(name, relations[object_id])
+          end
         end
 
         {result: relations, ids: relations.keys}
@@ -84,7 +88,11 @@ module JetSet
         target_reference = entity.references[target_name.to_sym]
         result = rows.map do |row|
           relation = map(entity.type, row, session, singular_name.to_s)
-          relation.set_reference!(target_reference.name, target, true)
+
+          unless target_reference.nil?
+            relation.set_reference!(target_reference.name, target, true)
+          end
+
           relation
         end
 

@@ -4,7 +4,7 @@ require 'logger'
 require 'integration/samples/mapping'
 require 'integration/samples/domain/plan'
 
-RSpec.describe 'Plain object' do
+RSpec.describe 'Plain entity' do
   Sequel.extension :migration
 
   before :all do
@@ -20,7 +20,7 @@ RSpec.describe 'Plain object' do
 
   describe 'session attach and finalize' do
     it 'successfully saves single plain object' do
-      plan = Plan.new(name: 'business', price: '25.0')
+      plan = Plan.new(name: 'business', price: 25.0)
       @session.attach(plan)
       @session.finalize
 
@@ -29,9 +29,9 @@ RSpec.describe 'Plain object' do
     end
   end
 
-  describe 'query' do
+  describe 'create/read' do
     it 'successfully returns plain object' do
-      plan_to_save = Plan.new(name: 'my_plan', price: '25.0')
+      plan_to_save = Plan.new(name: 'my_plan', price: 25.0)
       @session.attach(plan_to_save)
       @session.finalize
 
@@ -52,7 +52,7 @@ RSpec.describe 'Plain object' do
 
   describe 'updating' do
     it 'successfully updates single plain object' do
-      plan_to_save = Plan.new(name: 'my_plan', price: '25.0')
+      plan_to_save = Plan.new(name: 'my_plan', price: 25.0)
       @session.attach(plan_to_save)
       @session.finalize
 

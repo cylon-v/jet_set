@@ -91,7 +91,8 @@ module JetSet
           end
         end
         new_id = table.insert(fields, values)
-        @__attributes['id'] = Attribute.new('@id', new_id)
+        @__attributes['@id'] = Attribute.new('@id', new_id)
+        @id = new_id
       elsif dirty?
         attributes = {}
         dirty_attributes.each{|attribute| attributes[attribute.name.sub('@', '')] = instance_variable_get(attribute.name)}
