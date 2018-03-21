@@ -1,8 +1,8 @@
-require 'integration/samples/domain/plan'
-require 'integration/samples/domain/customer'
-require 'integration/samples/domain/subscription'
-require 'integration/samples/domain/invoice'
-require 'integration/samples/domain/line_item'
+require 'samples/domain/plan'
+require 'samples/domain/customer'
+require 'samples/domain/subscription'
+require 'samples/domain/invoice'
+require 'samples/domain/line_item'
 
 class Mapping
   def self.load_mapping

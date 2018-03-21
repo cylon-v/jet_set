@@ -96,12 +96,12 @@ module JetSet
 
     # Saves all changes of attached objects to the database.
     def finalize
-
       dirty_objects = @objects.select {|object| object.dirty?}
+      ordered_objects = @dependency_graph.order(dirty_objects)
 
-      if dirty_objects.length > 0
+      if ordered_objects.length > 0
         @connection.transaction do
-          dirty_objects.each{|obj| obj.flush(@connection)}
+          ordered_objects.each{|obj| obj.flush(@connection)}
         end
       end
     end

@@ -1,11 +1,11 @@
 require 'spec_helper'
 require 'sequel'
 require 'logger'
-require 'integration/samples/mapping'
-require 'integration/samples/domain/customer'
-require 'integration/samples/domain/plan'
-require 'integration/samples/domain/subscription'
-require 'integration/samples/domain/invoice'
+require 'samples/mapping'
+require 'samples/domain/customer'
+require 'samples/domain/plan'
+require 'samples/domain/subscription'
+require 'samples/domain/invoice'
 
 RSpec.describe 'Nested entity' do
   Sequel.extension :migration
@@ -13,7 +13,7 @@ RSpec.describe 'Nested entity' do
   before :all do
     @connection = Sequel.connect('sqlite:/')
     @connection.logger = Logger.new($stdout)
-    Sequel::Migrator.run(@connection, 'spec/integration/samples/migrations', :use_transactions => false)
+    Sequel::Migrator.run(@connection, 'spec/samples/migrations', :use_transactions => false)
 
     @container = Hypo::Container.new
     JetSet::init(Mapping.load_mapping, @container)
@@ -32,7 +32,7 @@ RSpec.describe 'Nested entity' do
       new_customer.add_invoice(invoice)
       subscription.activate
 
-      @session.attach(plan, new_customer, subscription, invoice)
+      @session.attach(subscription, invoice, plan, new_customer)
       @session.finalize
 
       customer_query = <<~SQL

@@ -1,8 +1,8 @@
 require 'spec_helper'
 require 'sequel'
 require 'logger'
-require 'integration/samples/mapping'
-require 'integration/samples/domain/plan'
+require 'samples/mapping'
+require 'samples/domain/plan'
 
 RSpec.describe 'Plain entity' do
   Sequel.extension :migration
@@ -10,7 +10,7 @@ RSpec.describe 'Plain entity' do
   before :all do
     @connection = Sequel.connect('sqlite:/')
     @connection.logger = Logger.new($stdout)
-    Sequel::Migrator.run(@connection, 'spec/integration/samples/migrations', :use_transactions => false)
+    Sequel::Migrator.run(@connection, 'spec/samples/migrations', :use_transactions => false)
 
     @container = Hypo::Container.new
     JetSet::init(Mapping.load_mapping, @container)

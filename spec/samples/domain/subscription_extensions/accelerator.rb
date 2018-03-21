@@ -1,4 +1,4 @@
-require_relative './extension'
+require_relative './tension'
 
 class Accelerator < Extension
   def initialize(attrs = {}, acceleration_service)
