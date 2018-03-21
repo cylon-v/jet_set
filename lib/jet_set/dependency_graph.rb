@@ -10,8 +10,6 @@ module JetSet
     end
 
     def order(entities)
-      p @matrix
-
       groups = {}
       entities.each do |entity|
         groups[entity.class.name] ||= []
@@ -19,11 +17,7 @@ module JetSet
       end
 
       type_order = groups.keys.sort{|a, b| @matrix[b].include?(a) ? -1 : 1}
-
-      entity_order = type_order.map do |type|
-        groups[type]
-      end
-
+      entity_order = type_order.map{|type| groups[type]}
       entity_order.flatten
     end
   end
