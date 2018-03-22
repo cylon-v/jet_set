@@ -7,7 +7,7 @@ module JetSet
   module Proxy
     def load_attributes!(attributes)
       attributes.each do |attribute|
-        name ="@#{attribute[:field]}"
+        name = "@#{attribute[:field]}"
         value = attribute[:value]
         instance_variable_set(name, value)
         @__attributes[name] = Attribute.new(name, value)
@@ -25,7 +25,7 @@ module JetSet
     end
 
     def set_collection!(name, value)
-      @__collections[name] = value.map{|item| item.respond_to?(:id) ? item.id : nil}
+      @__collections[name] = value.map {|item| item.respond_to?(:id) ? item.id : nil}
 
       instance_variable_set("@#{name}", value)
     end
@@ -45,7 +45,7 @@ module JetSet
         initial_state = @__collections[name]
         current_state = instance_variable_get("@#{name}")
         to_delete = initial_state - current_state
-        to_insert = current_state.select{|item| !item.respond_to?(:id)}
+        to_insert = current_state.select {|item| !item.respond_to?(:id)}
         to_insert.length > 0 || to_delete.length > 0
       end
 
@@ -59,10 +59,10 @@ module JetSet
     end
 
     def dirty_attributes
-      @__attributes.keys.select{|name|
+      @__attributes.keys.select {|name|
         current_value = instance_variable_get(name)
         @__attributes[name].changed?(current_value)
-      }.map{|name| @__attributes[name]}
+      }.map {|name| @__attributes[name]}
     end
 
     def flush(connection)
@@ -79,8 +79,8 @@ module JetSet
 
         load_attributes!(attributes)
 
-        fields = @__attributes.keys.map{|name| name.sub('@', '')}.select{|a| a != 'id'}
-        values = @__attributes.keys.select{|name| name.sub('@', '') != 'id'}.map{|name| @__attributes[name].value}
+        fields = @__attributes.keys.map {|name| name.sub('@', '')}.select {|a| a != 'id'}
+        values = @__attributes.keys.select {|name| name.sub('@', '') != 'id'}.map {|name| @__attributes[name].value}
 
         entity.references.keys.each do |key|
           value = instance_variable_get("@#{key}")
@@ -95,7 +95,7 @@ module JetSet
         @id = new_id
       elsif dirty?
         attributes = {}
-        dirty_attributes.each{|attribute| attributes[attribute.name.sub('@', '')] = instance_variable_get(attribute.name)}
+        dirty_attributes.each {|attribute| attributes[attribute.name.sub('@', '')] = instance_variable_get(attribute.name)}
         if attributes.keys.length > 0
           table.where(id: @id).update(attributes)
         end
@@ -112,11 +112,15 @@ module JetSet
         initial_state = @__collections[name]
         current_state = instance_variable_get("@#{name}")
 
-        to_delete = initial_state.select{|item| !item.nil?} - current_state.select{|item| item.respond_to?(:id)}.map{|item| item.id}
-        to_insert = current_state.select{|item| !item.respond_to?(:id)}
+        to_delete = initial_state.select {|item| !item.nil?} - current_state.select {|item| item.respond_to?(:id)}.map {|item| item.id}
+        to_insert = current_state.select {|item| !item.respond_to?(:id)}
 
         if to_delete.length > 0
           ids = to_delete.join(', ')
+          if entity.collections[name].using
+            column_name = self.class.name.underscore + '_id'
+            connection[entity.collections[name].using].where(column_name => ids).delete
+          end
           connection[name].where(id: ids).delete
         end
 
@@ -124,6 +128,28 @@ module JetSet
           to_insert.each do |item|
             @__factory.create(item)
             item.flush(connection)
+          end
+        end
+
+        if entity.collections[name].using
+          to_insert = []
+          current_state.each do |current_item|
+            to_insert << current_item unless initial_state.any?{|item| item == current_item}
+          end
+
+          my_column_name = self.class.name.underscore + '_id'
+          relation_table = entity.collections[name].using.to_sym
+
+          if to_insert.length > 0
+            to_insert.each do |item|
+              unless item.id
+                @__factory.create(item)
+                item.flush(connection)
+              end
+
+              foreign_column_name = item.class.name.underscore + '_id'
+              connection[relation_table].insert([my_column_name, foreign_column_name], [@id, item.id])
+            end
           end
         end
       end

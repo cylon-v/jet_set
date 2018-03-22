@@ -37,6 +37,16 @@ Sequel.migration do
       Boolean :active
       DateTime :started_at
     end
+
+    create_table(:groups) do
+      primary_key :id
+      String :name
+    end
+
+    create_table(:customer_groups) do
+      Integer :customer_id
+      Integer :group_id
+    end
   end
 
   down do

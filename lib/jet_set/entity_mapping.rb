@@ -20,7 +20,7 @@ module JetSet
     end
 
     def collection(name, attributes = {})
-      @collections[name] = Collection.new(name, attributes[:type])
+      @collections[name] = Collection.new(name, attributes[:type], attributes[:using])
     end
 
     def reference(name, attributes = {})
