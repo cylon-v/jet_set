@@ -1,5 +1,6 @@
 require 'hypo'
 require 'sequel'
+require 'sequel/extensions/inflector'
 require 'jet_set/version'
 require 'jet_set/mapper'
 require 'jet_set/proxy_factory'
@@ -10,6 +11,8 @@ require 'jet_set/query_parser'
 require 'jet_set/dependency_graph'
 
 module JetSet
+  Sequel.extension :inflector
+
   # Initializes JetSet environment.
   # Parameters:
   # +mapping+:: JetSet mapping definition. Instance of JetSet::Mapping class.
