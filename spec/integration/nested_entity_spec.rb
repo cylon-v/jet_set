@@ -23,8 +23,6 @@ RSpec.describe 'Nested entity' do
 
   describe 'session attach and finalize' do
     it 'successfully saves nested object' do
-      now = Time.now
-
       plan = Plan.new(name: 'business', price: 25.0)
       new_customer = Customer.new(first_name: 'Ivan', last_name: 'Ivanov')
       subscription = Subscription.new(plan: plan, customer: new_customer, started_at: DateTime.now)

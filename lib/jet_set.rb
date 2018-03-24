@@ -11,7 +11,7 @@ require 'jet_set/dependency_graph'
 
 module JetSet
   # Initializes JetSet environment.
-  # Params:
+  # Parameters:
   # +mapping+:: JetSet mapping definition. Instance of JetSet::Mapping class.
   # +container+:: (optional) Existing Hypo::Container instance.
   def self.init(mapping, container = Hypo::Container.new)
@@ -30,7 +30,7 @@ module JetSet
   end
 
   # Creates JetSet session and registers it in Hypo container.
-  # Params:
+  # Parameters:
   # +scope+:: a name of registered component which manages the session lifetime.
   def self.register_session(scope = nil)
     session_component = @container.register(JetSet::Session, :session)
@@ -49,7 +49,7 @@ module JetSet
   end
 
   # Creates JetSet session and registers it in Hypo container.
-  # Params:
+  # Parameters:
   # +connection+:: Sequel connection.
   # +scope+:: a name of registered component which manages the session lifetime.
   # Returns the session object.

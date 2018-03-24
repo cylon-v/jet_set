@@ -3,7 +3,7 @@ require 'sequel'
 module JetSet
   class Session
     # Initializes +Session+ object.
-    # Params:
+    # Parameters:
     # +connection+:: Sequel connection object.
     # +mapper+:: Sequel rows to Ruby objects mapper.
     # +query_parser+:: a parser which evaluates JetSet extensions in SQL-expressions.
@@ -17,7 +17,7 @@ module JetSet
     end
 
     # Executes SQL-like query for further mapping.
-    # Params:
+    # Parameters:
     # +query+:: SQL-like query
     # +params+:: +query+ params
     # +&block+:: +Proc+ object that maps returning result using +map+ and +preload+ methods.
@@ -31,7 +31,7 @@ module JetSet
     end
 
     # Maps root entity using a result of +execute+ method.
-    # Params:
+    # Parameters:
     # +type+:: Ruby class of an object to map.
     # +rows+:: an array of rows returned by +execute+ method.
     # +prefix+:: (optional) a prefix for extracting the object
@@ -58,7 +58,7 @@ module JetSet
 
     # Loads nested references and collections using sub-query
     # for previously loaded aggregation root, see +map+ method.
-    # Params:
+    # Parameters:
     # +target+:: single or multiple entities that are a Ruby objects constructed by +map+ or +preload+ method.
     # +relation+:: an object reference or collection name defined in JetSet mapping for the +target+.
     def preload(target, relation, query, params = {}, &block)
@@ -76,7 +76,7 @@ module JetSet
     # Use this method for newly created aggregation roots. No need to use it for new objects
     # that were bound to a root which is already attached. All objects loaded from the database
     # are already under the session tracking.
-    # Params:
+    # Parameters:
     # +object+:: any Ruby object defined in the mapping.
     def attach(*objects)
       to_attach = []

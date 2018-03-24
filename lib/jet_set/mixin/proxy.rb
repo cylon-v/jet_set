@@ -1,9 +1,7 @@
 require 'jet_set/attribute'
 require 'sequel'
-require 'sequel/extensions/inflector'
 
 module JetSet
-  Sequel.extension :inflector
   module Proxy
     def load_attributes!(attributes)
       attributes.each do |attribute|

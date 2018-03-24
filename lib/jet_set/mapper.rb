@@ -1,11 +1,8 @@
 require 'sequel'
-require 'sequel/extensions/inflector'
 require 'jet_set/mapper_error'
 
 module JetSet
   class Mapper
-    Sequel.extension :inflector
-
     def initialize(proxy_factory, mapping, container)
       @proxy_factory = proxy_factory
       @mapping = mapping
@@ -14,11 +11,6 @@ module JetSet
       @mapping.entity_mappings.values.each do |entity_mapping|
         container.register(entity_mapping.type)
       end
-    end
-
-    def entity_mapping(object)
-      entity_name = object.class.name.underscore.to_sym
-      @mapping.get(entity_name)
     end
 
     def map(type, row, session, prefix = '')
