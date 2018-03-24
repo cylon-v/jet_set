@@ -1,8 +1,10 @@
 require 'jet_set/attribute'
-require 'sequel'
 
 module JetSet
-  module Proxy
+  # A decorator for domain objects.
+  # It adds JetSet specific stuff for object changes tracking and persistence.
+  module Entity
+
     def load_attributes!(attributes)
       attributes.each do |attribute|
         name = "@#{attribute[:field]}"

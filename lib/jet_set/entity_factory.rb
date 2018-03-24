@@ -1,8 +1,8 @@
 require 'jet_set/mixin/identity'
-require 'jet_set/mixin/proxy'
+require 'jet_set/mixin/entity'
 
 module JetSet
-  class ProxyFactory
+  class EntityFactory
     def initialize(mapping)
       @mapping = mapping
     end
@@ -15,7 +15,7 @@ module JetSet
       object.instance_variable_set('@__factory', self)
 
       object.extend(Identity)
-      object.extend(Proxy)
+      object.extend(Entity)
     end
   end
 end
