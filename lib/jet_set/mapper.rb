@@ -3,8 +3,8 @@ require 'jet_set/mapper_error'
 
 module JetSet
   class Mapper
-    def initialize(entity_factory, mapping, container)
-      @entity_factory = entity_factory
+    def initialize(entity_builder, mapping, container)
+      @entity_builder = entity_builder
       @mapping = mapping
       @container = container
 
@@ -24,7 +24,7 @@ module JetSet
                      .select {|key| entity_mapping.fields.include? key.sub(prefix + '__', '')}
                      .map {|key| {field: key.sub(prefix + '__', ''), value: row[key.to_sym]}}
 
-      entity = @entity_factory.create(object)
+      entity = @entity_builder.create(object)
       entity.load_attributes!(attributes)
 
       reference_names = keys.select {|key| !key.start_with?(prefix) && key.include?('__')}
@@ -93,7 +93,7 @@ module JetSet
           relation = map(entity_mapping.type, row, session, singular_name.to_s)
 
           unless target_reference.nil?
-            relation.set_reference!(target_reference.name, target, true)
+            relation.set_reference!(target_reference.name, target)
           end
 
           relation

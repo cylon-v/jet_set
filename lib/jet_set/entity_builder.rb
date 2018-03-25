@@ -2,7 +2,7 @@ require 'jet_set/mixin/identity'
 require 'jet_set/mixin/entity'
 
 module JetSet
-  class EntityFactory
+  class EntityBuilder
     def initialize(mapping)
       @mapping = mapping
     end

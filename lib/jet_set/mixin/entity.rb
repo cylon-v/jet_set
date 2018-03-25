@@ -14,13 +14,8 @@ module JetSet
       end
     end
 
-    def set_reference!(name, value, reverse = false)
+    def set_reference!(name, value)
       @__references[name] = value
-
-      #experimental
-      @__reference_reverse ||= {}
-      @__reference_reverse[name] = reverse
-
       instance_variable_set("@#{name}", value)
     end
 

@@ -3,7 +3,7 @@ require 'sequel'
 require 'sequel/extensions/inflector'
 require 'jet_set/version'
 require 'jet_set/mapper'
-require 'jet_set/entity_factory'
+require 'jet_set/entity_builder'
 require 'jet_set/session'
 require 'jet_set/mapping'
 require 'jet_set/entity_mapping'
@@ -22,7 +22,7 @@ module JetSet
 
     @container.register_instance(mapping, :mapping)
 
-    @container.register(JetSet::EntityFactory, :entity_factory)
+    @container.register(JetSet::EntityBuilder, :entity_builder)
       .using_lifetime(:singleton)
 
     @container.register(JetSet::Mapper, :mapper)

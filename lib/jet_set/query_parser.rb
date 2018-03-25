@@ -1,9 +1,17 @@
 module JetSet
+  # A converter of JetSet syntax to SQL queries.
   class QueryParser
+
+    # Initializes the parser
+    # Parameters:
+    #   +mapping+:: JetSet mapping +JetSet:Mapping+.
     def initialize(mapping)
       @mapping = mapping
     end
 
+    # Parses JetSet query and returns SQL query.
+    # Parameters:
+    #   +query+:: an SQL query with trivial extensions
     def parse(query)
       entity_matches = query.scan(/(\s*)(\w+)\.\*\s+AS\s+ENTITY\s+(\w+)/)
       entity_expressions = query.scan(/(\w+\.\*\s+AS\s+ENTITY\s+\w+)/).flatten
