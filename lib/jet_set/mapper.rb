@@ -2,7 +2,12 @@ require 'sequel'
 require 'jet_set/mapper_error'
 
 module JetSet
+  # A converter of a data rows to object model according to a mapping.
   class Mapper
+    # Parameters:
+    #   +entity_builder+:: an instance of +JetSet::EntityBuilder+
+    #   +mapping+:: an instance of +JetSet::Mapping+
+    #   +container+:: IoC container (+Hypo::Container+) for resolving entity dependencies
     def initialize(entity_builder, mapping, container)
       @entity_builder = entity_builder
       @mapping = mapping
@@ -13,6 +18,14 @@ module JetSet
       end
     end
 
+    # Converts a table row to an object
+    # Parameters:
+    #   +type+:: entity type defined in the mapping
+    #   +row+:: hash representation of table row
+    #   +session+:: instance of +JetSet::Session+
+    #   +prefix+:: (optional) custom prefix for extracting the type attributes,
+    #     i.e."customer" for query:
+    #       "SELECT u.name AS customer__name from users u"
     def map(type, row, session, prefix = '')
       entity_name = type.name.underscore.to_sym
       entity_mapping = @mapping.get(entity_name)
@@ -42,6 +55,12 @@ module JetSet
       entity
     end
 
+    # Constructs object model relationships between of complex objects.
+    # Parameters:
+    #   +target+:: an instance or an array of entity instances
+    #   +name+:: name of the target attribute to bind
+    #   +rows+:: an array of database rows (hashes)
+    #   +session+:: an instance of +JetSet::Session+
     def map_association(target, name, rows, session)
       singular_name = name.to_s.singularize.to_sym
       entity_mapping = @mapping.get(singular_name)

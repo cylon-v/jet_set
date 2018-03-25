@@ -95,6 +95,8 @@ module JetSet
     end
 
     # Saves all changes of attached objects to the database.
+    # * Compatible with +Hypo::Scope+ +finalize+ interface,
+    # see Hypo docs about components finalizing at https://github.com/cylon-v/hypo.
     def finalize
       dirty_objects = @objects.select {|object| object.dirty?}
       ordered_objects = @dependency_graph.order(dirty_objects)

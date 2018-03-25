@@ -16,22 +16,31 @@ module JetSet
       end
     end
 
-
+    # Sets a reference to another entity.
+    # Parameters:
+    #   +name+:: name of an entity defined in the mapping
+    #   +value+:: an instance of the entity
     def set_reference!(name, value)
       @__references[name] = value
       instance_variable_set("@#{name}", value)
     end
 
+    # Sets a collection of related entities.
+    # Parameters:
+    #   +name+:: name of an entity defined in the mapping
+    #   +value+:: an array of instances of the entity
     def set_collection!(name, value)
       @__collections[name] = value.map {|item| item.respond_to?(:id) ? item.id : nil}
-
       instance_variable_set("@#{name}", value)
     end
 
+    # Returns +true+ if entity is not loaded from the database and +false+ if it is.
     def new?
       @id.nil?
     end
 
+    # Returns +true+ if the entity contains unsaved changes (attributes, references, collection)
+    # or if it's new (see +new?+ method).
     def dirty?
       attributes_changed = @__attributes.keys.any? do |name|
         attribute = @__attributes[name]
@@ -56,6 +65,7 @@ module JetSet
       attributes_changed || references_changed || collections_changed || new?
     end
 
+    # Enumerates changed attributes
     def dirty_attributes
       @__attributes.keys.select {|name|
         current_value = instance_variable_get(name)
@@ -63,6 +73,9 @@ module JetSet
       }.map {|name| @__attributes[name]}
     end
 
+    # Flushes current state and saves a changes to the database.
+    # Parameters:
+    #   +connection+:: Sequel connection
     def flush(connection)
       table_name = self.class.name.underscore.pluralize.to_sym
       table = connection[table_name]
