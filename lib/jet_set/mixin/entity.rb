@@ -4,7 +4,9 @@ module JetSet
   # A decorator for domain objects.
   # It adds JetSet specific stuff for object changes tracking and persistence.
   module Entity
-
+    # Loads the entity attributes.
+    # Parameters:
+    #   +attributes+:: a hash of attributes in format :name => :value
     def load_attributes!(attributes)
       attributes.each do |attribute|
         name = "@#{attribute[:field]}"
@@ -13,6 +15,7 @@ module JetSet
         @__attributes[name] = Attribute.new(name, value)
       end
     end
+
 
     def set_reference!(name, value)
       @__references[name] = value
