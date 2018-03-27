@@ -16,9 +16,9 @@ module JetSet
     def parse(expression)
       sql = expression.dup
 
-      returns_single_item = sql.scan(/LIMIT 1(\\n|;|\s)*\z/).any?
-      entity_matches = sql.scan(/(\s*)(\w+)\.\*\s+AS\s+ENTITY\s+(\w+)/)
-      entity_expressions = sql.scan(/(\w+\.\*\s+AS\s+ENTITY\s+\w+)/).flatten
+      returns_single_item = sql.scan(/LIMIT 1(\\n|;|\s)*\z/i).any?
+      entity_matches = sql.scan(/(\s*)(\w+)\.\*\s+AS\s+ENTITY\s+(\w+)/i)
+      entity_expressions = sql.scan(/(\w+\.\*\s+AS\s+ENTITY\s+\w+)/i).flatten
 
       entities = []
       entity_matches.each_with_index do |match, index|
