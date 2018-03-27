@@ -16,33 +16,31 @@ module JetSet
       @dependency_graph = dependency_graph
     end
 
-    # Executes SQL-like query for further mapping.
-    # Parameters:
-    # +query+:: SQL-like query
-    # +params+:: +query+ params
-    # +&block+:: +Proc+ object that maps returning result using +map+ and +preload+ methods.
-    def execute(query, params = {}, &block)
-      sql = @query_parser.parse(query)
-      rows = @connection.fetch(sql, params).to_a
-
-      if block_given?
-        instance_exec(rows, &block)
-      end
-    end
-
-    # Maps root entity using a result of +execute+ method.
+    # Fetches root entity using a result of +execute+ method.
     # Parameters:
     # +type+:: Ruby class of an object to map.
-    # +rows+:: an array of rows returned by +execute+ method.
-    # +prefix+:: (optional) a prefix for extracting the object
-    #            fields like "guest" for parsing "SELECT u.id AS guest__id ...".
+    # +expression+:: SQL-like query
+    # +params+:: +query+ params
     # +&block+:: further handling of the result.
-    def map(type, rows, prefix = type.name.underscore, &block)
+    def fetch(type, expression, params = {}, &block)
+      prefix = type.name.underscore
+      query = @query_parser.parse(expression)
+
+      unless query.refers_to?(type)
+        raise MapperError, "The query doesn't contain #{type.name} ENTITY statement."
+      end
+
+      rows = @connection.fetch(query.sql, params).to_a
+
       if rows.length == 0
         result = nil
-      elsif rows.length == 1
+      elsif rows.length == 1 && query.returns_single_item?
         result = @mapper.map(type, rows[0], self, prefix)
       else
+        if query.returns_single_item?
+          raise MapperError, "A single row was expected to map but the query returned #{rows.length} rows."
+        end
+
         result = []
         rows.each do |row|
           result << @mapper.map(type, row, self, prefix)
@@ -62,8 +60,8 @@ module JetSet
     # +target+:: single or multiple entities that are a Ruby objects constructed by +map+ or +preload+ method.
     # +relation+:: an object reference or collection name defined in JetSet mapping for the +target+.
     def preload(target, relation, query, params = {}, &block)
-      sql = @query_parser.parse(query)
-      rows = @connection.fetch(sql, params).to_a
+      query = @query_parser.parse(query)
+      rows = @connection.fetch(query.sql, params).to_a
       result = @mapper.map_association(target, relation, rows, self)
 
       if block_given?
@@ -96,7 +94,7 @@ module JetSet
 
     # Saves all changes of attached objects to the database.
     # * Compatible with +Hypo::Scope+ +finalize+ interface,
-    # see Hypo docs about components finalizing at https://github.com/cylon-v/hypo.
+    # see Hypo docs at https://github.com/cylon-v/hypo.
     def finalize
       dirty_objects = @objects.select {|object| object.dirty?}
       ordered_objects = @dependency_graph.order(dirty_objects)

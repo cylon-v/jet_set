@@ -40,11 +40,10 @@ RSpec.describe 'Plain entity' do
           p.* AS ENTITY plan
         FROM plans p
         WHERE p.name = :plan_name
+        LIMIT 1
       SQL
 
-      loaded_plan = @session.execute(query, plan_name: 'my_plan') do |row|
-        map(Plan, row)
-      end
+      loaded_plan = @session.fetch(Plan, query, plan_name: 'my_plan')
 
       expect(loaded_plan.name).to eql('my_plan')
     end
@@ -64,16 +63,11 @@ RSpec.describe 'Plain entity' do
         LIMIT 1
       SQL
 
-      loaded_plan = @session.execute(query, plan_name: 'my_plan') do |row|
-        map(Plan, row)
-      end
-
+      loaded_plan = @session.fetch(Plan, query, plan_name: 'my_plan')
       loaded_plan.update(name: 'no_plan')
       @session.finalize
 
-      updated_plan = @session.execute(query, plan_name: 'no_plan') do |row|
-        map(Plan, row)
-      end
+      updated_plan = @session.fetch(Plan, query, plan_name: 'no_plan')
 
       expect(updated_plan.name).to eql('no_plan')
     end

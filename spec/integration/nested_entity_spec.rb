@@ -65,14 +65,12 @@ RSpec.describe 'Nested entity' do
         WHERE s.customer_id = :customer_id
       SQL
 
-      customer = @session.execute(customer_query) do |row|
-        map(Customer, row) do |customer|
-          preload(customer, :invoices, invoices_sql, customer_id: customer.id) do |invoices, ids|
-            preload(invoices, :line_items, line_items_sql, invoice_ids: ids)
-          end
-
-          preload(customer, :subscriptions, subscriptions_sql, customer_id: customer.id)
+      customer = @session.fetch(Customer, customer_query) do |customer|
+        preload(customer, :invoices, invoices_sql, customer_id: customer.id) do |invoices, ids|
+          preload(invoices, :line_items, line_items_sql, invoice_ids: ids)
         end
+
+        preload(customer, :subscriptions, subscriptions_sql, customer_id: customer.id)
       end
 
       expect(customer.subscriptions[0].plan.name).to eql('business')

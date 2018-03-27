@@ -46,10 +46,8 @@ RSpec.describe 'Many-to-many relationship' do
         WHERE cg.customer_id IN :customer_ids
       SQL
 
-      customers = @session.execute(customers_query) do |row|
-        map(Customer, row) do |customers|
-          preload(customers, :groups, groups_query, customer_ids: customers.map{|c| c.id})
-        end
+      customers = @session.fetch(Customer, customers_query) do |customers|
+        preload(customers, :groups, groups_query, customer_ids: customers.map{|c| c.id})
       end
 
       expect(customers[0].groups.length).to eql(1)
