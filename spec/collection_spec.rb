@@ -8,7 +8,7 @@ RSpec.describe 'Collection' do
       collection = JetSet::Collection.new('customers', Customer, 'group_customers')
       expect(collection.name).to eql('customers')
       expect(collection.type).to eql(Customer)
-      expect(collection.using_table).to eql('group_customers')
+      expect(collection.using).to eql('group_customers')
     end
   end
 end
