@@ -4,7 +4,7 @@ require 'logger'
 require 'samples/mapping'
 require 'samples/domain/plan'
 
-RSpec.describe 'Many-to-many relationship' do
+RSpec.describe 'Many-to-many relationship', integration: true do
   Sequel.extension :migration
 
   before :all do

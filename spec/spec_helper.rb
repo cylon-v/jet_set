@@ -1,5 +1,11 @@
-require "bundler/setup"
-require "jet_set"
+require 'bundler/setup'
+require 'simplecov'
+
+SimpleCov.start do
+  add_filter "/spec/"
+end
+
+require 'jet_set'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

@@ -4,7 +4,7 @@ require 'logger'
 require 'samples/mapping'
 require 'samples/domain/plan'
 
-RSpec.describe 'Plain entity' do
+RSpec.describe 'Plain entity', integration: true do
   Sequel.extension :migration
 
   before :all do

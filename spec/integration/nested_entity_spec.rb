@@ -7,7 +7,7 @@ require 'samples/domain/plan'
 require 'samples/domain/subscription'
 require 'samples/domain/invoice'
 
-RSpec.describe 'Nested entity' do
+RSpec.describe 'Nested entity', integration: true do
   Sequel.extension :migration
 
   before :all do
