@@ -7,7 +7,7 @@ require 'samples/domain/group'
 
 class Mapping
   def self.load_mapping
-    JetSet::Mapping.new do
+    JetSet::map do
       entity Customer do
         field :first_name
         field :last_name

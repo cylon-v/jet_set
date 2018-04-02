@@ -2,22 +2,6 @@ require 'jet_set/entity_mapping'
 
 module JetSet
   # Represents JetSet Mapping.
-  # Usage:
-  #   JetSet::Mapping.new do
-  #     entity Invoice do
-  #       field :amount
-  #       field :created_at
-  #       collection :line_items
-  #       reference :subscription, type: Subscription
-  #     end
-  #     ...
-  #     entity User do
-  #       field :amount
-  #       field :created_at
-  #       collection :line_items
-  #       reference :subscription, type: Subscription
-  #     end
-  #   end
   class Mapping
     attr_reader :entity_mappings
 

@@ -1,5 +1,6 @@
 require 'sequel'
 require 'jet_set/mapper_error'
+require 'jet_set/row'
 
 module JetSet
   # A converter of a data rows to object model according to a mapping.
@@ -21,33 +22,23 @@ module JetSet
     # Converts a table row to an object
     # Parameters:
     #   +type+:: entity type defined in the mapping
-    #   +row+:: hash representation of table row
+    #   +row_hash+:: hash representation of table row
     #   +session+:: instance of +JetSet::Session+
     #   +prefix+:: (optional) custom prefix for extracting the type attributes,
     #     i.e."customer" for query:
     #       "SELECT u.name AS customer__name from users u"
-    def map(type, row, session, prefix = '')
+    def map(type, row_hash, session, prefix = '')
       entity_name = type.name.underscore.to_sym
       entity_mapping = @mapping.get(entity_name)
-
+      row = Row.new(row_hash, entity_mapping.fields, prefix)
       object = @container.resolve(entity_name)
-
-      keys = row.keys.map {|key| key.to_s}
-      attributes = keys.select {|key| key.to_s.start_with? prefix + '__'}
-                     .select {|key| entity_mapping.fields.include? key.sub(prefix + '__', '')}
-                     .map {|key| {field: key.sub(prefix + '__', ''), value: row[key.to_sym]}}
-
       entity = @entity_builder.create(object)
-      entity.load_attributes!(attributes)
+      entity.load_attributes!(row.attributes)
 
-      reference_names = keys.select {|key| !key.start_with?(prefix) && key.include?('__')}
-                          .map {|key| key.split('__')[0]}
-                          .uniq
-
-      reference_names.each do |reference_name|
+      row.reference_names.each do |reference_name|
         if entity_mapping.references.key? reference_name.to_sym
           type = entity_mapping.references[reference_name.to_sym].type
-          entity.set_reference! reference_name, map(type, row, session, reference_name)
+          entity.set_reference! reference_name, map(type, row_hash, session, reference_name)
         end
       end
 
