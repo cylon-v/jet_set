@@ -18,7 +18,9 @@ module JetSet
       @dependencies = []
       @fields = ['id']
 
-      instance_eval(&block)
+      if block_given?
+        instance_eval(&block)
+      end
     end
 
     # Defines an attribute of a simple type (String, Integer, etc)
@@ -36,6 +38,10 @@ module JetSet
     #     +weak+:: (optional) a flag for making a reference to an entity which is not directly
     #              associated for skipping persistence steps for it
     def reference(name, params = {})
+      unless params.has_key? :type
+        raise MapperError, "Reference \"#{name}\" should have a type. Example:\n reference '#{name}', type: User\n"
+      end
+
       @references[name] = Reference.new(name, params[:type])
       @dependencies << params[:type] unless params[:weak]
     end
@@ -47,6 +53,10 @@ module JetSet
     #     +type+:: class of the entity
     #     +using+:: (optional) a name of many-to-many association table if needed.
     def collection(name, params = {})
+      unless params.has_key? :type
+        raise MapperError, "Collection \"#{name}\" should have a type. Example:\n collection '#{name}', type: User\n"
+      end
+
       @collections[name] = Collection.new(name, params[:type], params[:using])
     end
   end

@@ -20,7 +20,7 @@ class Mapping
       entity Invoice do
         field :amount
         field :created_at
-        collection :line_items
+        collection :line_items, type: LineItem
         reference :subscription, type: Subscription
       end
 

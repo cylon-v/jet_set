@@ -11,7 +11,8 @@ module JetSet
       @mapping = mapping
     end
 
-    # Creates a trackable object by decorating a pure Ruby object.
+    # Makes passed object to be trackable.
+    # +object+:: pure Ruby object
     def create(object)
       object.instance_variable_set('@__attributes', {})
       object.instance_variable_set('@__references', {})
