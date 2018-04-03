@@ -127,111 +127,175 @@ RSpec.describe 'Mapper' do
     end
 
     context 'when target is an array' do
-      before :each do
-        @invoice_entity1 = double(:invoice_entity1)
-        @invoice_entity2 = double(:invoice_entity2)
+      context "and it's one-to-many association"  do
+        before :each do
+          @invoice_entity1 = double(:invoice_entity1)
+          @invoice_entity2 = double(:invoice_entity2)
 
-        @line_item1 = LineItem.new
-        @line_item2 = LineItem.new
+          @line_item1 = LineItem.new
+          @line_item2 = LineItem.new
 
-        @line_item_entity1 = double(:line_item_entity1)
-        @line_item_entity2 = double(:line_item_entity2)
+          @line_item_entity1 = double(:line_item_entity1)
+          @line_item_entity2 = double(:line_item_entity2)
 
-        allow(@line_item_entity1).to receive(:id).and_return(1)
-        allow(@line_item_entity2).to receive(:id).and_return(2)
+          allow(@line_item_entity1).to receive(:id).and_return(1)
+          allow(@line_item_entity2).to receive(:id).and_return(2)
 
-        @invoice1 = Invoice.new
-        @invoice2 = Invoice.new
+          @invoice1 = Invoice.new
+          @invoice2 = Invoice.new
 
-        allow(@invoice_entity1).to receive(:class).and_return(Invoice)
-        allow(@invoice_entity2).to receive(:class).and_return(Invoice)
+          allow(@invoice_entity1).to receive(:class).and_return(Invoice)
+          allow(@invoice_entity2).to receive(:class).and_return(Invoice)
 
-        allow(@container).to receive(:resolve).with(:invoice).and_return(@invoice1)
-        allow(@container).to receive(:resolve).with(:invoice).and_return(@invoice2)
-      end
+          allow(@container).to receive(:resolve).with(:invoice).and_return(@invoice1)
+          allow(@container).to receive(:resolve).with(:invoice).and_return(@invoice2)
+        end
 
-      context 'when reverse id is not defined' do
-        it 'raises MapperError with specific message' do
+        context 'when reverse id is not defined' do
+          it 'raises MapperError with specific message' do
+            expect(@container).to receive(:resolve).with(:line_item).and_return(@line_item1)
+
+            allow(@entity_builder).to receive(:create).with(@line_item1).and_return(@line_item_entity1)
+            allow(@entity_builder).to receive(:create).with(@line_item2).and_return(@line_item_entity2)
+
+            allow(@entity_builder).to receive(:create).with(@invoice1).and_return(@invoice_entity1)
+            allow(@entity_builder).to receive(:create).with(@invoice2).and_return(@invoice_entity2)
+
+            allow(@line_item_entity1).to receive(:load_attributes!)
+            allow(@line_item_entity2).to receive(:load_attributes!)
+
+            allow(@line_item_entity1).to receive(:load_attributes!)
+            allow(@line_item_entity2).to receive(:load_attributes!)
+
+            allow(@invoice_entity1).to receive(:load_attributes!)
+            allow(@invoice_entity2).to receive(:load_attributes!)
+
+            allow(@session).to receive(:attach)
+
+            row_hashes = [{
+              line_item__id: 1,
+              line_item__price: 100.0,
+              line_item__quantity: 1
+            }, {
+              line_item__id: 2,
+              line_item__price: 50.0,
+              line_item__quantity: 1
+            }]
+
+            expect{
+              @mapper.map_association([@invoice_entity1, @invoice_entity2], :line_items, row_hashes, @session)
+            }.to raise_error(JetSet::MapperError, "Field \"invoice_id\" is not defined in the query but it's required to construct \"line_items to invoice\" association. Just add it to SELECT clause.")
+          end
+        end
+
+        it 'adds a complex association to the array of targets' do
           expect(@container).to receive(:resolve).with(:line_item).and_return(@line_item1)
+          expect(@container).to receive(:resolve).with(:line_item).and_return(@line_item2)
 
-          allow(@entity_builder).to receive(:create).with(@line_item1).and_return(@line_item_entity1)
-          allow(@entity_builder).to receive(:create).with(@line_item2).and_return(@line_item_entity2)
+          expect(@entity_builder).to receive(:create).with(@line_item1).and_return(@line_item_entity1)
+          expect(@entity_builder).to receive(:create).with(@line_item2).and_return(@line_item_entity2)
 
-          allow(@entity_builder).to receive(:create).with(@invoice1).and_return(@invoice_entity1)
-          allow(@entity_builder).to receive(:create).with(@invoice2).and_return(@invoice_entity2)
+          allow(@line_item_entity1).to receive(:id).and_return(1)
+          allow(@line_item_entity2).to receive(:id).and_return(2)
 
-          allow(@line_item_entity1).to receive(:load_attributes!)
-          allow(@line_item_entity2).to receive(:load_attributes!)
+          expect(@line_item_entity1).to receive(:load_attributes!)
+          expect(@line_item_entity2).to receive(:load_attributes!)
 
-          allow(@line_item_entity1).to receive(:load_attributes!)
-          allow(@line_item_entity2).to receive(:load_attributes!)
+          allow(@invoice_entity1).to receive(:id).and_return(30)
+          allow(@invoice_entity2).to receive(:id).and_return(31)
 
-          allow(@invoice_entity1).to receive(:load_attributes!)
-          allow(@invoice_entity2).to receive(:load_attributes!)
+          expect(@session).to receive(:attach).with(@line_item_entity1)
+          expect(@session).to receive(:attach).with(@line_item_entity2)
 
-          allow(@session).to receive(:attach)
+          expect(@invoice_entity1).to receive(:set_collection!).with(:line_items, [@line_item_entity1])
+          expect(@invoice_entity2).to receive(:set_collection!).with(:line_items, [@line_item_entity2])
+          expect(@line_item_entity1).to receive(:set_reference!).with(:invoice, @invoice_entity1)
+          expect(@line_item_entity2).to receive(:set_reference!).with(:invoice, @invoice_entity2)
 
           row_hashes = [{
             line_item__id: 1,
             line_item__price: 100.0,
-            line_item__quantity: 1
+            line_item__quantity: 1,
+            invoice_id: 30
           }, {
             line_item__id: 2,
             line_item__price: 50.0,
-            line_item__quantity: 1
+            line_item__quantity: 1,
+            invoice_id: 31
           }]
 
-          expect{
-            @mapper.map_association([@invoice_entity1, @invoice_entity2], :line_items, row_hashes, @session)
-          }.to raise_error(JetSet::MapperError, "Field \"invoice_id\" is not defined in the query but it's required to construct \"line_items to invoice\" association. Just add it to SELECT clause.")
+          result = @mapper.map_association([@invoice_entity1, @invoice_entity2], :line_items, row_hashes, @session)
+          expect(result).to eq({
+            result: {
+              30 => [@line_item_entity1],
+              31 => [@line_item_entity2]
+            },
+            ids: [1, 2]
+          })
         end
       end
 
-      it 'adds a complex association to the array of targets' do
-        expect(@container).to receive(:resolve).with(:line_item).and_return(@line_item1)
-        expect(@container).to receive(:resolve).with(:line_item).and_return(@line_item2)
+      context "and it's many-to-many association"  do
+        before :each do
+          @customer1 = Customer.new
+          @customer2 = Customer.new
+          @customer_entity1 = double(:customer_entity1)
+          @customer_entity2 = double(:customer_entity2)
+          allow(@customer_entity1).to receive(:class).and_return(Customer)
+          allow(@customer_entity2).to receive(:class).and_return(Customer)
+          allow(@customer_entity1).to receive(:id).and_return(1)
+          allow(@customer_entity2).to receive(:id).and_return(2)
 
-        expect(@entity_builder).to receive(:create).with(@line_item1).and_return(@line_item_entity1)
-        expect(@entity_builder).to receive(:create).with(@line_item2).and_return(@line_item_entity2)
+          @group1 = Group.new
+          @group2 = Group.new
+          @group_entity1 = double(:group_entity1)
+          @group_entity2 = double(:group_entity2)
+          allow(@group_entity1).to receive(:id).and_return(21)
+          allow(@group_entity2).to receive(:id).and_return(22)
 
-        allow(@line_item_entity1).to receive(:id).and_return(1)
-        allow(@line_item_entity2).to receive(:id).and_return(2)
+          allow(@container).to receive(:resolve).with(:customer).and_return(@customer1)
+          allow(@container).to receive(:resolve).with(:customer).and_return(@customer2)
+        end
 
-        expect(@line_item_entity1).to receive(:load_attributes!)
-        expect(@line_item_entity2).to receive(:load_attributes!)
+        it 'adds a complex association to the array of targets' do
+          expect(@container).to receive(:resolve).with(:group).and_return(@group1)
+          expect(@container).to receive(:resolve).with(:group).and_return(@group2)
 
-        allow(@invoice_entity1).to receive(:id).and_return(30)
-        allow(@invoice_entity2).to receive(:id).and_return(31)
+          expect(@entity_builder).to receive(:create).with(@group1).and_return(@group_entity1)
+          expect(@entity_builder).to receive(:create).with(@group2).and_return(@group_entity2)
 
-        expect(@session).to receive(:attach).with(@line_item_entity1)
-        expect(@session).to receive(:attach).with(@line_item_entity2)
+          expect(@group_entity1).to receive(:load_attributes!)
+          expect(@group_entity2).to receive(:load_attributes!)
 
-        expect(@invoice_entity1).to receive(:set_collection!).with(:line_items, [@line_item_entity1])
-        expect(@invoice_entity2).to receive(:set_collection!).with(:line_items, [@line_item_entity2])
-        expect(@line_item_entity1).to receive(:set_reference!).with(:invoice, @invoice_entity1)
-        expect(@line_item_entity2).to receive(:set_reference!).with(:invoice, @invoice_entity2)
+          expect(@session).to receive(:attach).with(@group_entity1)
+          expect(@session).to receive(:attach).with(@group_entity2)
 
-        row_hashes = [{
-          line_item__id: 1,
-          line_item__price: 100.0,
-          line_item__quantity: 1,
-          invoice_id: 30
-        }, {
-          line_item__id: 2,
-          line_item__price: 50.0,
-          line_item__quantity: 1,
-          invoice_id: 31
-        }]
+          expect(@customer_entity1).to receive(:set_collection!).with(:groups, [@group_entity1])
+          expect(@customer_entity2).to receive(:set_collection!).with(:groups, [@group_entity2])
+          expect(@group_entity1).to receive(:set_collection!).with(:customers, [@customer_entity1])
+          expect(@group_entity2).to receive(:set_collection!).with(:customers, [@customer_entity2])
 
-        result = @mapper.map_association([@invoice_entity1, @invoice_entity2], :line_items, row_hashes, @session)
-        expect(result).to eq({
-          result: {
-            30 => [@line_item_entity1],
-            31 => [@line_item_entity2]
-          },
-          ids: [1, 2]
-        })
+          row_hashes = [{
+            group__id: 21,
+            name: 'Super Users',
+            customer_id: 1
+          }, {
+            group__id: 22,
+            name: 'Power Users',
+            customer_id: 2
+          }]
+
+          result = @mapper.map_association([@customer_entity1, @customer_entity2], :groups, row_hashes, @session)
+          expect(result).to eq({
+            result: {
+              1 => [@group_entity1],
+              2 => [@group_entity2]
+            },
+            ids: [21, 22]
+          })
+        end
       end
     end
+
   end
 end

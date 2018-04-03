@@ -89,12 +89,10 @@ module JetSet
 
               entry.set_collection!(name, relations[target_id])
 
-              relation_name = entry.class.name.underscore.to_sym
-              relation_mapping = @mapping.get(relation_name)
-              if relation_mapping.collections[relation_name]
-                relation_objects.each{|obj| obj.set_collection!(target_name, back_relations[entry.id])}
+              # if reverse relation is present
+              if entity_mapping.collections[target_name.pluralize.to_sym]
+                relation_objects.each{|obj| obj.set_collection!(target_name.pluralize.to_sym, back_relations[obj.id])}
               end
-
             end
           end
         end
