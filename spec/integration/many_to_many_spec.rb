@@ -9,7 +9,7 @@ RSpec.describe 'Many-to-many relationship', integration: true do
 
   before :all do
     @connection = Sequel.connect('sqlite:/')
-    @connection.logger = Logger.new($stdout)
+    # @connection.logger = Logger.new($stdout)
     Sequel::Migrator.run(@connection, 'spec/integration/migrations', :use_transactions => false)
 
     @container = Hypo::Container.new

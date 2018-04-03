@@ -61,7 +61,6 @@ module JetSet
         target_name = target[0].class.name.underscore
         back_relations = {}
 
-
         if rows.length > 0
           target_id_name = "#{target_name.underscore}_id"
           target_reference = entity_mapping.references[target_name.to_sym]
@@ -90,23 +89,25 @@ module JetSet
 
               entry.set_collection!(name, relations[target_id])
 
-              relation_objects.each{|obj| obj.set_collection!(target_name, back_relations[entry.id])}
+              relation_name = entry.class.name.underscore.to_sym
+              relation_mapping = @mapping.get(relation_name)
+              if relation_mapping.collections[relation_name]
+                relation_objects.each{|obj| obj.set_collection!(target_name, back_relations[entry.id])}
+              end
+
             end
           end
         end
 
-        {result: relations, ids: relations.keys}
+        ids = []
+        relations.values.each do |associations|
+          ids << associations.map{|a| a.id}
+        end
+
+        {result: relations, ids: ids.flatten.uniq}
       else
-        target_name = target.class.name.underscore
-        target_reference = entity_mapping.references[target_name.to_sym]
         result = rows.map do |row|
-          relation = map(entity_mapping.type, row, session, singular_name.to_s)
-
-          unless target_reference.nil?
-            relation.set_reference!(target_reference.name, target)
-          end
-
-          relation
+          map(entity_mapping.type, row, session, singular_name.to_s)
         end
 
         target.set_collection!(name, result)

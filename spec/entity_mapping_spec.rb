@@ -52,7 +52,7 @@ RSpec.describe 'EntityMapping' do
       end
     end
 
-    context 'type is not defined' do
+    context 'when type is not defined' do
       it 'raises specific error' do
         entity_mapping = JetSet::EntityMapping.new(Customer)
         expect {entity_mapping.reference('group')}.to raise_error(JetSet::MapperError)
@@ -75,7 +75,7 @@ RSpec.describe 'EntityMapping' do
       end
     end
 
-    context 'type is not defined' do
+    context 'when type is not defined' do
       it 'raises specific error' do
         entity_mapping = JetSet::EntityMapping.new(Customer)
         expect {entity_mapping.collection('groups')}.to raise_error(JetSet::MapperError)

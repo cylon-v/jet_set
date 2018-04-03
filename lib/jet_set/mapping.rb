@@ -15,8 +15,8 @@ module JetSet
 
     # Defines an entity mapping
     # Parameters:
-    # +type+:: an entity class
-    # +&block+:: should contain mapping definitions of the entity attributes. See +JetSet::EntityMapping+ class.
+    #   +type+:: an entity class
+    #   +&block+:: should contain mapping definitions of the entity attributes. See +JetSet::EntityMapping+ class.
     # Returns an instance of +EntityMapping+
     def entity(type, &block)
       name = type.name.underscore.to_sym
@@ -25,7 +25,7 @@ module JetSet
 
     # Returns an entity mapping by its +name+.
     # Parameters:
-    # +name+:: string
+    #   +name+:: string
     def get(name)
       @entity_mappings[name]
     end
