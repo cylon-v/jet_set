@@ -27,7 +27,7 @@ module JetSet
     #   +prefix+:: (optional) custom prefix for extracting the type attributes,
     #     i.e."customer" for query:
     #       "SELECT u.name AS customer__name from users u"
-    def map(type, row_hash, session, prefix = '')
+    def map(type, row_hash, session, prefix = type.name.underscore)
       entity_name = type.name.underscore.to_sym
       entity_mapping = @mapping.get(entity_name)
       row = Row.new(row_hash, entity_mapping.fields, prefix)

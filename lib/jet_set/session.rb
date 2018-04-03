@@ -23,7 +23,6 @@ module JetSet
     # +params+:: +query+ params
     # +&block+:: further handling of the result.
     def fetch(type, expression, params = {}, &block)
-      prefix = type.name.underscore
       query = @query_parser.parse(expression)
 
       unless query.refers_to?(type)
@@ -35,7 +34,7 @@ module JetSet
       if rows.length == 0
         result = nil
       elsif rows.length == 1 && query.returns_single_item?
-        result = @mapper.map(type, rows[0], self, prefix)
+        result = @mapper.map(type, rows[0], self)
       else
         if query.returns_single_item?
           raise MapperError, "A single row was expected to map but the query returned #{rows.length} rows."
@@ -43,7 +42,7 @@ module JetSet
 
         result = []
         rows.each do |row|
-          result << @mapper.map(type, row, self, prefix)
+          result << @mapper.map(type, row, self)
         end
       end
 

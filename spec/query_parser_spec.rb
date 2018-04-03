@@ -9,7 +9,7 @@ RSpec.describe 'QueryParser' do
   end
 
   describe 'parse' do
-    describe 'common case' do
+    context 'common case' do
       expr = <<~SQL
         SELECT
           g.* AS entity group,
@@ -36,7 +36,7 @@ RSpec.describe 'QueryParser' do
       end
     end
 
-    describe 'when result set is limited with 1 row' do
+    context 'when result set is limited with 1 row' do
       expr = <<~SQL
         SELECT
           g.* AS ENTITY group
@@ -50,7 +50,7 @@ RSpec.describe 'QueryParser' do
       end
     end
 
-    describe 'when result set is not limited' do
+    context 'when result set is not limited' do
       expr = <<~SQL
         SELECT
           g.* AS ENTITY group
@@ -63,7 +63,7 @@ RSpec.describe 'QueryParser' do
       end
     end
 
-    describe 'when result set is limited with more than 1 row' do
+    context 'when result set is limited with more than 1 row' do
       expr = <<~SQL
         SELECT
           g.* AS ENTITY group
@@ -77,7 +77,7 @@ RSpec.describe 'QueryParser' do
       end
     end
 
-    describe 'when nested result set is limited with 1 row' do
+    context 'when nested result set is limited with 1 row' do
       expr = <<~SQL
         SELECT
           g.* AS ENTITY group
@@ -88,6 +88,23 @@ RSpec.describe 'QueryParser' do
       it 'returns a query which marked as returns_single_item?' do
         query = @query_parser.parse(expr)
         expect(query.returns_single_item?).to eql(false)
+      end
+    end
+
+    context 'when entity is not defined in the mapping' do
+      expr = <<~SQL
+        SELECT
+          g.* AS ENTITY group,
+          g.* AS ENTITY undefined
+        FROM groups g
+          INNER JOIN (SELECT id FROM users LIMIT 10) u ON g.owner = u.id
+      SQL
+
+      it 'raises MapperError with specific message' do
+        expect{@query_parser.parse(expr)}.to raise_error(
+          JetSet::MapperError,
+          "Entity \"undefined\" is not defined in the mapping. Query:\n#{expr}"
+        )
       end
     end
   end
