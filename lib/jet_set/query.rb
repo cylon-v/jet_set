@@ -10,8 +10,8 @@ module JetSet
     #     entities: entities (+JetSet:EntityMapping+) enumerated in the query statements
     def initialize(attrs = {})
       @sql = attrs[:sql]
-      @returns_single_item = attrs[:returns_single_item]
-      @entities = attrs[:entities]
+      @returns_single_item = attrs[:returns_single_item] || false
+      @entities = attrs[:entities] || []
     end
 
     # Does SQL expression return single row? (LIMIT 1)

@@ -1,4 +1,5 @@
 module JetSet
+  # A container for fields/references extraction logic
   class Row
     attr_reader :attributes, :reference_names
 

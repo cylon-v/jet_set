@@ -19,7 +19,15 @@ module JetSet
     #   +&block+:: should contain mapping definitions of the entity attributes. See +JetSet::EntityMapping+ class.
     # Returns an instance of +EntityMapping+
     def entity(type, &block)
+      unless type.is_a? Class
+        raise MapperError, 'Mapping definition of an entity should begin from a type declaration which should be a Class.'
+      end
+
       name = type.name.underscore.to_sym
+      if @entity_mappings.has_key?(name)
+        raise MapperError, "Mapping definition for entity of type #{type} is already registered."
+      end
+
       @entity_mappings[name] = EntityMapping.new(type, &block)
     end
 
