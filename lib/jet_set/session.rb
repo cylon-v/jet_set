@@ -23,14 +23,16 @@ module JetSet
     # +params+:: +query+ params
     # +&block+:: further handling of the result.
     def fetch(type, expression, params = {}, &block)
-      query = @query_parser.parse(expression)
+      unless type.is_a? Class
+        raise MapperError, 'Parameter "type" should be a Class.'
+      end
 
+      query = @query_parser.parse(expression)
       unless query.refers_to?(type)
-        raise MapperError, "The query doesn't contain #{type.name} ENTITY statement."
+        raise MapperError, "The query doesn't contain \"AS ENTITY #{type.name.underscore}\" statement."
       end
 
       rows = @connection.fetch(query.sql, params).to_a
-
       if rows.length == 0
         result = nil
       elsif rows.length == 1 && query.returns_single_item?
