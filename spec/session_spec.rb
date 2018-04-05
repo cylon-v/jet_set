@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'jet_set/mixin/entity'
 require 'jet_set/session'
 require 'jet_set/mapper_error'
 require 'samples/domain/customer'
@@ -136,6 +137,19 @@ RSpec.describe 'Session' do
           end
         end
       end
+
+      context 'when a block is given' do
+        it 'executes the block' do
+          allow(@connection).to receive(:fetch).and_return([])
+
+          block_executed = false
+          @session.fetch(Plan, '...') do
+            block_executed = true
+          end
+
+          expect(block_executed).to eql(true)
+        end
+      end
     end
   end
 
@@ -172,10 +186,96 @@ RSpec.describe 'Session' do
   end
 
   describe 'attach' do
+    before :each do
+      @entity = double(:entity)
+      allow(@entity).to receive(:kind_of?).with(JetSet::Entity).and_return(true)
+    end
 
+    context 'when object is an entity' do
+      it 'just adds it to the session' do
+        expect(@entity_builder).to_not receive(:create).with(@entity)
+
+        @session.attach(@entity)
+        expect(@session.instance_variable_get('@objects')).to include(@entity)
+      end
+    end
+
+    context 'when object is a pure Ruby object' do
+      it 'converts it to an entity and then adds to the session' do
+        plan = Plan.new
+        expect(@entity_builder).to receive(:create).with(plan).and_return(@entity)
+
+        @session.attach(plan)
+        expect(@session.instance_variable_get('@objects')).to include(@entity)
+      end
+    end
+
+    context 'when the parameter is an array' do
+      it 'successfully add all objects to the session' do
+        plan1 = Plan.new
+        plan1_entity = double(:plan1_entity)
+
+        plan2 = Plan.new
+        plan2_entity = double(:plan2_entity)
+
+        customer1 = Customer.new
+        customer1_entity = double(:customer1_entity)
+
+        customer2 = Customer.new
+        customer2_entity = double(:customer2_entity)
+
+        expect(@entity_builder).to receive(:create).with(plan1).and_return(plan1_entity)
+        expect(@entity_builder).to receive(:create).with(plan2).and_return(plan2_entity)
+        expect(@entity_builder).to receive(:create).with(customer1).and_return(customer1_entity)
+        expect(@entity_builder).to receive(:create).with(customer2).and_return(customer2_entity)
+
+        @session.attach(plan1, plan2, [customer1, customer2], @entity)
+        expect(@session.instance_variable_get('@objects'))
+          .to include(@entity, plan1_entity, plan2_entity, customer1_entity, customer2_entity)
+      end
+    end
   end
 
   describe 'finalize' do
+    before :each do
+      @clean_object = double(:clean_object)
+      allow(@clean_object).to receive(:dirty?).and_return(false)
+    end
 
+    context 'when there are dirty objects in the session' do
+      it 'flushes dirty objects using the connection transaction according to order of their dependencies' do
+        dirty_object1 = double(:dirty_object1)
+        allow(dirty_object1).to receive(:dirty?).and_return(true)
+
+        dirty_object2 = double(:dirty_object2)
+        allow(dirty_object2).to receive(:dirty?).and_return(true)
+
+        @session.instance_variable_set('@objects', [@clean_object, dirty_object1, dirty_object2])
+
+        expect(@dependency_graph).to receive(:order).with([dirty_object1, dirty_object2])
+                                       .and_return([dirty_object2, dirty_object1])
+        expect(@connection).to receive(:transaction) do |&block|
+          instance_exec(&block)
+        end
+
+        expect(@clean_object).to_not receive(:flush)
+        expect(dirty_object2).to receive(:flush).ordered
+        expect(dirty_object1).to receive(:flush).ordered
+
+        @session.finalize
+      end
+    end
+
+    context 'when there are dirty objects in the session' do
+      it 'flushes dirty objects using the connection transaction according to order of their dependencies' do
+        @session.instance_variable_set('@objects', [@clean_object])
+
+        expect(@dependency_graph).to receive(:order).with([]).and_return([])
+        expect(@connection).not_to receive(:transaction)
+        expect(@clean_object).not_to receive(:flush).ordered
+
+        @session.finalize
+      end
+    end
   end
 end

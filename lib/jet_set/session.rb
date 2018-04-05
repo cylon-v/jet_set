@@ -76,7 +76,7 @@ module JetSet
     # that were bound to a root which is already attached. All objects loaded from the database
     # are already under the session tracking.
     # Parameters:
-    # +object+:: any Ruby object defined in the mapping.
+    # +objects+:: any Ruby objects defined in the mapping.
     def attach(*objects)
       to_attach = []
       objects.each do |object|
