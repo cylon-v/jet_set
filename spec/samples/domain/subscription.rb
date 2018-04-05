@@ -1,5 +1,5 @@
 class Subscription
-  attr_reader :plan, :extensions, :active
+  attr_reader :plan, :extensions, :active, :started_at
 
   def initialize(attrs = {})
     @started_at = Date.today
@@ -8,7 +8,6 @@ class Subscription
     @customer = attrs[:customer]
     @extensions = []
   end
-
 
   def add_extension(extension)
     @extensions << extension

@@ -6,7 +6,7 @@ module JetSet
   module Entity
     # Loads the entity attributes.
     # Parameters:
-    #   +attributes+:: a hash of attributes in format :name => :value
+    #   +attributes+:: a hash of attributes in format :field => :value
     def load_attributes!(attributes)
       attributes.each do |attribute|
         name = "@#{attribute[:field]}"
@@ -19,7 +19,7 @@ module JetSet
     # Sets a reference to another entity.
     # Parameters:
     #   +name+:: name of an entity defined in the mapping
-    #   +value+:: an instance of the entity
+    #   +value+:: an instance of an entity
     def set_reference!(name, value)
       @__references[name] = value
       instance_variable_set("@#{name}", value)
@@ -30,7 +30,7 @@ module JetSet
     #   +name+:: name of an entity defined in the mapping
     #   +value+:: an array of instances of the entity
     def set_collection!(name, value)
-      @__collections[name] = value.map {|item| item.respond_to?(:id) ? item.id : nil}
+      @__collections[name] = value.map{|item| item.respond_to?(:id) ? item.id : nil}.select{|item| !item.nil?}
       instance_variable_set("@#{name}", value)
     end
 
@@ -50,7 +50,7 @@ module JetSet
 
       collections_changed = @__collections.keys.any? do |name|
         initial_state = @__collections[name]
-        current_state = instance_variable_get("@#{name}")
+        current_state = instance_variable_get("@#{name}").map{|item| item.id}.select{|id| !id.nil?}
         to_delete = initial_state - current_state
         to_insert = current_state.select {|item| !item.respond_to?(:id)}
         to_insert.length > 0 || to_delete.length > 0
