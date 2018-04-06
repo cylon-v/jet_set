@@ -5,7 +5,7 @@ require 'jet_set/mapper_error'
 require 'samples/domain/customer'
 require 'samples/domain/plan'
 
-RSpec.describe 'Session' do
+RSpec.describe JetSet::Session do
   before :each do
     @connection = double(:connection)
     @mapper = double(:mapper)

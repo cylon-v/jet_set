@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'jet_set/attribute'
 
-RSpec.describe 'Attribute' do
+RSpec.describe JetSet::Attribute do
   describe 'changed' do
     context "when it is not an array" do
       before :all do

@@ -4,7 +4,7 @@ require 'jet_set/mapper_error'
 require 'samples/domain/customer'
 require 'samples/domain/group'
 
-RSpec.describe 'EntityMapping' do
+RSpec.describe JetSet::EntityMapping do
   describe 'initialize' do
     it 'initializes an instance of mapping' do
       entity_mapping = JetSet::EntityMapping.new(Customer)

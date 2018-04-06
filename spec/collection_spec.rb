@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'jet_set/collection'
 require 'samples/domain/customer'
 
-RSpec.describe 'Collection' do
+RSpec.describe JetSet::Collection do
   describe 'initialize' do
     it 'properly initializes the collection' do
       collection = JetSet::Collection.new('customers', Customer, 'group_customers')

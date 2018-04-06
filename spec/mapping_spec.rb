@@ -3,7 +3,7 @@ require 'jet_set/mapping'
 require 'jet_set/entity_mapping'
 require 'samples/domain/plan'
 
-RSpec.describe 'Mapping' do
+RSpec.describe JetSet::Mapping do
   describe 'entity' do
     it 'registers an entity' do
       mapping = JetSet::Mapping.new do

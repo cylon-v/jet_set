@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'jet_set/row'
 
-RSpec.describe 'Row' do
+RSpec.describe JetSet::Row do
   describe 'initialize' do
     it 'correctly initializes Row object' do
       today = Date.today

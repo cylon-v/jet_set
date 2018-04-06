@@ -145,31 +145,27 @@ module JetSet
           end
         end
 
-        if to_insert.length > 0
-          to_insert.each do |item|
-            @__factory.create(item)
-            item.flush(connection)
-          end
+        to_insert.each do |item|
+          @__factory.create(item)
+          item.flush(connection)
         end
 
         if entity.collections[name].using
-          to_insert = []
+          to_association_insert = []
           current_state.each do |current_item|
-            to_insert << current_item unless initial_state.any?{|item| item == current_item}
+            to_association_insert << current_item unless initial_state.any?{|item| item == current_item}
           end
 
           relation_table = entity.collections[name].using.to_sym
 
-          if to_insert.length > 0
-            to_insert.each do |item|
-              unless item.id
-                @__factory.create(item)
-                item.flush(connection)
-              end
-
-              foreign_column_name = item.class.name.underscore + '_id'
-              connection[relation_table].insert([my_column_name, foreign_column_name], [@id, item.id])
+          to_association_insert.each do |item|
+            unless item.id
+              @__factory.create(item)
+              item.flush(connection)
             end
+
+            foreign_column_name = item.class.name.underscore + '_id'
+            connection[relation_table].insert([my_column_name, foreign_column_name], [@id, item.id])
           end
         end
       end

@@ -7,7 +7,7 @@ require 'samples/domain/subscription'
 require 'samples/domain/invoice'
 require 'samples/domain/line_item'
 
-RSpec.describe 'DependencyGraph' do
+RSpec.describe JetSet::DependencyGraph do
   before :all do
     mapping = Mapping.load_mapping
     @dependency_graph = JetSet::DependencyGraph.new(mapping)

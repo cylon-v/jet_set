@@ -4,7 +4,7 @@ require 'samples/domain/plan'
 require 'samples/domain/subscription'
 require 'samples/domain/invoice'
 
-RSpec.describe 'Query' do
+RSpec.describe JetSet::Query do
   describe 'returns_single_item?' do
     context 'when returns one item' do
       it 'returns true' do

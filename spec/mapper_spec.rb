@@ -9,7 +9,7 @@ require 'samples/domain/invoice'
 require 'samples/domain/line_item'
 require 'samples/mapping'
 
-RSpec.describe 'Mapper' do
+RSpec.describe JetSet::Mapper do
   before :each do
     @entity_builder = double(:entity_builder)
 

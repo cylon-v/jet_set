@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'samples/mapping'
 require 'jet_set/query_parser'
 
-RSpec.describe 'QueryParser' do
+RSpec.describe JetSet::QueryParser do
   before :all do
     mapping = Mapping.load_mapping
     @query_parser = JetSet::QueryParser.new(mapping)

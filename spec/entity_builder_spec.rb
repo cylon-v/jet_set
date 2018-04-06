@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'jet_set/collection'
 require 'samples/domain/customer'
 
-RSpec.describe 'EntityBuilder' do
+RSpec.describe JetSet::EntityBuilder do
   before :all do
     @mapping = double(:mapping)
     @entity_builder = JetSet::EntityBuilder.new(@mapping)
