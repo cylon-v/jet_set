@@ -159,4 +159,152 @@ RSpec.describe 'Entity' do
       expect(@entity.dirty_attributes).not_to include(attribute)
     end
   end
+
+  describe 'flush' do
+    before :each do
+      @connection = double(:connection)
+      @invoices_table = double(:invoices_table)
+      allow(@connection).to receive(:[]).with(:invoices).and_return(@invoices_table)
+    end
+
+    context 'when it is new' do
+      it 'inserts new record into the table' do
+        today = Date.today
+        subscription = Subscription.new({active: true})
+        subscription.activate
+
+        @subscriptions_table = double(:subscriptions_table)
+        allow(@connection).to receive(:[]).with(:subscriptions).and_return(@subscriptions_table)
+
+        @entity.instance_variable_set('@amount', 100.0)
+        @entity.instance_variable_set('@created_at', today)
+        @entity.instance_variable_set('@subscription', subscription)
+        expect(@subscriptions_table).to receive(:insert).with(['started_at', 'active'], [today, true]).and_return('some-subscription-id').ordered
+        expect(@invoices_table).to receive(:insert).with(['amount', 'created_at', 'subscription_id'], [100.0, today, 'some-subscription-id']).ordered
+        @entity.flush(@connection)
+      end
+    end
+
+    context 'when it is dirty' do
+      it 'inserts the record in the table' do
+        attribute = double(:attribute)
+        allow(attribute).to receive(:name).and_return('@amount')
+        allow(attribute).to receive(:changed?).and_return(true)
+        @entity.instance_variable_set('@__attributes', {'@amount': attribute})
+        @entity.instance_variable_set('@id', 1)
+        @entity.instance_variable_set('@amount', 200.0)
+
+        expect(@invoices_table).to receive(:where).with(id: 1).and_return(@invoices_table)
+        expect(@invoices_table).to receive(:update).with('amount' => 200.0)
+        @entity.flush(@connection)
+      end
+    end
+
+    context 'when a collection contains new items' do
+      context 'and it is one-to-many association' do
+        it 'inserts the items into their table' do
+          @line_items_table = double(:line_items_table)
+          allow(@connection).to receive(:[]).with(:line_items).and_return(@line_items_table)
+
+          @entity.instance_variable_set('@id', 1)
+          @entity.line_items << LineItem.new(price: 100.0, quantity: 1)
+          @entity.line_items << LineItem.new(price: 50.0, quantity: 2)
+
+          expect(@line_items_table).to receive(:insert).with(['price', 'quantity'], [100.0, 1])
+          expect(@line_items_table).to receive(:insert).with(['price', 'quantity'], [50.0, 2])
+          @entity.flush(@connection)
+        end
+      end
+
+      context 'and it is many-to-many association' do
+        it 'inserts the items into many-to-many relation table' do
+          @customer = @entity_builder.create(Customer.new)
+          @customers_table = double(:customers_table)
+          allow(@connection).to receive(:[]).with(:customers).and_return(@customers_table)
+
+          @groups_table = double(:groups_table)
+          allow(@connection).to receive(:[]).with(:groups).and_return(@groups_table)
+
+          @association_table = double(:association_table)
+          allow(@connection).to receive(:[]).with(:customer_groups).and_return(@association_table)
+
+
+          @customer.instance_variable_set('@id', 'customer_id')
+          @customer.groups << Group.new(name: 'Users')
+          @customer.groups << Group.new(name: 'Admins')
+
+          expect(@groups_table).to receive(:insert).with(['name'], ['Users']).and_return('group-id-1')
+          expect(@groups_table).to receive(:insert).with(['name'], ['Admins']).and_return('group-id-2')
+
+          expect(@association_table).to receive(:insert).with(['customer_id', 'group_id'], ['customer_id', 'group-id-1'])
+          expect(@association_table).to receive(:insert).with(['customer_id', 'group_id'], ['customer_id', 'group-id-2'])
+
+          @customer.flush(@connection)
+        end
+      end
+    end
+
+    context 'when a collection has a removed items' do
+      context 'and it is one-to-many association' do
+        it 'removes the item from its table' do
+          @entity.instance_variable_set('@id', 1)
+
+          @line_items_table = double(:line_items_table)
+          allow(@connection).to receive(:[]).with(:line_items).and_return(@line_items_table)
+
+          line_item1 = @entity_builder.create(LineItem.new(price: 100.0, quantity: 1))
+          line_item1.instance_variable_set('@id', 'line-item-1')
+
+          line_item2 = @entity_builder.create(LineItem.new(price: 50.0, quantity: 2))
+          line_item2.instance_variable_set('@id', 'line-item-2')
+
+          initial_state = @entity.instance_variable_get('@__collections')
+          initial_state[:line_items] = [line_item1.id, line_item2.id]
+          @entity.instance_variable_set('@line_items', [line_item1])
+
+          expect(@line_items_table).to receive(:where).with(id: ['line-item-2']).and_return(@line_items_table).ordered
+          expect(@line_items_table).to receive(:delete).ordered
+          @entity.flush(@connection)
+        end
+      end
+
+      context 'and it is many-to-many association' do
+        it 'removes the row from association table' do
+          @entity.instance_variable_set('@id', 1)
+
+          customer = @entity_builder.create(Customer.new)
+          customer.instance_variable_set('@id', 'customer-1')
+
+          customers_table = double(:customers_table)
+          allow(@connection).to receive(:[]).with(:customers).and_return(customers_table)
+
+          groups_table = double(:groups_table)
+          allow(@connection).to receive(:[]).with(:groups).and_return(groups_table)
+
+          association_table = double(:association_table)
+          allow(@connection).to receive(:[]).with(:customer_groups).and_return(association_table)
+
+          group1 = @entity_builder.create(Group.new(name: 'Users'))
+          group1.instance_variable_set('@id', 'group-1')
+
+          group2 = @entity_builder.create(Group.new(name: 'Admins'))
+          group2.instance_variable_set('@id', 'group-2')
+
+          initial_state = customer.instance_variable_get('@__collections')
+          initial_state[:groups] = [group1.id, group2.id]
+          customer.instance_variable_set('@groups', [])
+
+          expect(association_table).to receive(:where).with('customer_id' => 'customer-1', 'group_id' => 'group-1')
+                                         .and_return(association_table).ordered
+          expect(association_table).to receive(:delete).ordered
+
+          expect(association_table).to receive(:where).with('customer_id' => 'customer-1', 'group_id' => 'group-2')
+                                         .and_return(association_table).ordered
+          expect(association_table).to receive(:delete).ordered
+
+          customer.flush(@connection)
+        end
+      end
+    end
+  end
 end

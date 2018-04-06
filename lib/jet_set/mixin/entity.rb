@@ -80,6 +80,8 @@ module JetSet
       table_name = self.class.name.underscore.pluralize.to_sym
       table = connection[table_name]
       entity_name = self.class.name.underscore.to_sym
+      my_column_name = self.class.name.underscore + '_id'
+
       entity = @__mapping.get(entity_name)
 
       if new?
@@ -96,8 +98,14 @@ module JetSet
         entity.references.keys.each do |key|
           value = instance_variable_get("@#{key}")
           if value
+            reference_id = value.instance_variable_get('@id')
+            if reference_id.nil?
+              @__factory.create(value)
+              value.flush(connection)
+            end
             set_reference!(key, value)
             fields << "#{key}_id"
+
             values << value.instance_variable_get('@id')
           end
         end
@@ -123,16 +131,18 @@ module JetSet
         initial_state = @__collections[name]
         current_state = instance_variable_get("@#{name}")
 
-        to_delete = initial_state.select {|item| !item.nil?} - current_state.select {|item| item.respond_to?(:id)}.map {|item| item.id}
-        to_insert = current_state.select {|item| !item.respond_to?(:id)}
+        to_delete = initial_state.select{|item| !item.nil?} - current_state.select{|item| item.respond_to?(:id)}.map{|item| item.id}
+        to_insert = current_state.select{|item| !item.respond_to?(:id)}
 
         if to_delete.length > 0
-          ids = to_delete.join(', ')
           if entity.collections[name].using
-            column_name = self.class.name.underscore + '_id'
-            connection[entity.collections[name].using].where(column_name => ids).delete
+            foreign_column_name = name.to_s.singularize.underscore + '_id'
+            to_delete.each do |foreign_id|
+              connection[entity.collections[name].using.to_sym].where(my_column_name => id, foreign_column_name => foreign_id).delete
+            end
+          else
+            connection[name].where(id: to_delete).delete
           end
-          connection[name].where(id: ids).delete
         end
 
         if to_insert.length > 0
@@ -148,7 +158,6 @@ module JetSet
             to_insert << current_item unless initial_state.any?{|item| item == current_item}
           end
 
-          my_column_name = self.class.name.underscore + '_id'
           relation_table = entity.collections[name].using.to_sym
 
           if to_insert.length > 0
