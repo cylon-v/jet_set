@@ -75,10 +75,10 @@ module JetSet
 
     # Flushes current state and saves a changes to the database.
     # Parameters:
-    #   +connection+:: Sequel connection
-    def flush(connection)
+    #   +sequel+:: Sequel sequel
+    def flush(sequel)
       table_name = self.class.name.underscore.pluralize.to_sym
-      table = connection[table_name]
+      table = sequel[table_name]
       entity_name = self.class.name.underscore.to_sym
       my_column_name = self.class.name.underscore + '_id'
 
@@ -101,7 +101,7 @@ module JetSet
             reference_id = value.instance_variable_get('@id')
             if reference_id.nil?
               @__factory.create(value)
-              value.flush(connection)
+              value.flush(sequel)
             end
             set_reference!(key, value)
             fields << "#{key}_id"
@@ -138,16 +138,16 @@ module JetSet
           if entity.collections[name].using
             foreign_column_name = name.to_s.singularize.underscore + '_id'
             to_delete.each do |foreign_id|
-              connection[entity.collections[name].using.to_sym].where(my_column_name => id, foreign_column_name => foreign_id).delete
+              sequel[entity.collections[name].using.to_sym].where(my_column_name => id, foreign_column_name => foreign_id).delete
             end
           else
-            connection[name].where(id: to_delete).delete
+            sequel[name].where(id: to_delete).delete
           end
         end
 
         to_insert.each do |item|
           @__factory.create(item)
-          item.flush(connection)
+          item.flush(sequel)
         end
 
         if entity.collections[name].using
@@ -161,11 +161,11 @@ module JetSet
           to_association_insert.each do |item|
             unless item.id
               @__factory.create(item)
-              item.flush(connection)
+              item.flush(sequel)
             end
 
             foreign_column_name = item.class.name.underscore + '_id'
-            connection[relation_table].insert([my_column_name, foreign_column_name], [@id, item.id])
+            sequel[relation_table].insert([my_column_name, foreign_column_name], [@id, item.id])
           end
         end
       end

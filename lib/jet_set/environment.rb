@@ -33,7 +33,7 @@ module JetSet
     # Parameters:
     # +scope+:: a name of registered component which manages the session lifetime.
     def register_session(scope = nil)
-      session_component = @container.register(JetSet::Session, :session)
+      session_component = @container.register(JetSet::Session, :jet_set)
       dependency_graph_component = @container.register(JetSet::DependencyGraph, :dependency_graph)
 
       if scope.nil?
@@ -50,14 +50,14 @@ module JetSet
 
     # Creates JetSet session and registers it in Hypo container.
     # Parameters:
-    # +connection+:: Sequel connection.
+    # +sequel+:: Sequel connection.
     # +scope+:: a name of registered component which manages the session lifetime.
     # Returns the session object.
-    def open_session(connection, scope = nil)
-      @container.register_instance(connection, :connection)
+    def open_session(sequel, scope = nil)
+      @container.register_instance(sequel, :sequel)
 
       register_session(scope)
-      @container.resolve(:session)
+      @container.resolve(:jet_set)
     end
 
 

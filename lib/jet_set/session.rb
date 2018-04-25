@@ -4,11 +4,11 @@ module JetSet
   class Session
     # Initializes +Session+ object.
     # Parameters:
-    # +connection+:: Sequel connection object.
+    # +sequel+:: Sequel sequel object.
     # +mapper+:: Sequel rows to Ruby objects mapper.
     # +query_parser+:: a parser which evaluates JetSet extensions in SQL-expressions.
-    def initialize(connection, mapper, query_parser, entity_builder, dependency_graph)
-      @connection = connection
+    def initialize(sequel, mapper, query_parser, entity_builder, dependency_graph)
+      @sequel = sequel
       @mapper = mapper
       @objects = []
       @query_parser = query_parser
@@ -32,7 +32,7 @@ module JetSet
         raise MapperError, "The query doesn't contain \"AS ENTITY #{type.name.underscore}\" statement."
       end
 
-      rows = @connection.fetch(query.sql, params).to_a
+      rows = @sequel.fetch(query.sql, params).to_a
       if rows.length == 0
         result = nil
       elsif rows.length == 1 && query.returns_single_item?
@@ -62,7 +62,7 @@ module JetSet
     # +relation+:: an object reference or collection name defined in JetSet mapping for the +target+.
     def preload(target, relation, query, params = {}, &block)
       query = @query_parser.parse(query)
-      rows = @connection.fetch(query.sql, params).to_a
+      rows = @sequel.fetch(query.sql, params).to_a
       result = @mapper.map_association(target, relation, rows, self)
 
       if block_given?
@@ -101,8 +101,8 @@ module JetSet
       ordered_objects = @dependency_graph.order(dirty_objects)
 
       if ordered_objects.length > 0
-        @connection.transaction do
-          ordered_objects.each{|obj| obj.flush(@connection)}
+        @sequel.transaction do
+          ordered_objects.each{|obj| obj.flush(@sequel)}
         end
       end
     end

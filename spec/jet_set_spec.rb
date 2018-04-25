@@ -45,7 +45,7 @@ RSpec.describe JetSet do
 
       JetSet::init(@mapping, @container)
 
-      expect(@container).to receive(:register).with(JetSet::Session, :session).and_return(@component)
+      expect(@container).to receive(:register).with(JetSet::Session, :jet_set).and_return(@component)
       expect(@container).to receive(:register).with(JetSet::DependencyGraph, :dependency_graph).and_return(@component)
     end
 
@@ -71,13 +71,13 @@ RSpec.describe JetSet do
     describe 'open_session' do
       before :each do
         @connection = double(:connection)
-        @session = double(:session)
-        allow(@container).to receive(:resolve).with(:session).and_return(@session)
+        @session = double(:jet_set)
+        allow(@container).to receive(:resolve).with(:jet_set).and_return(@session)
       end
 
       context 'when scope is passed' do
         it 'registers session and dependency graph components using the scope' do
-          expect(@container).to receive(:register_instance).with(@connection, :connection)
+          expect(@container).to receive(:register_instance).with(@connection, :sequel)
           expect(@container).to receive(:register_instance).with(:some_scope, :session_scope).and_return(@component)
           expect(@component).to receive(:use_lifetime).with(:scope).and_return(@component).twice
           expect(@component).to receive(:bind_to).with(:some_scope).twice
@@ -87,7 +87,7 @@ RSpec.describe JetSet do
         end
 
         it 'registers session and dependency graph components using null-scope' do
-          expect(@container).to receive(:register_instance).with(@connection, :connection)
+          expect(@container).to receive(:register_instance).with(@connection, :sequel)
           expect(@container).to receive(:register_instance).with(nil, :session_scope).and_return(@component)
           expect(@component).to receive(:use_lifetime).with(:transient).and_return(@component).twice
 
