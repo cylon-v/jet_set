@@ -103,7 +103,7 @@ RSpec.describe JetSet::QueryParser do
       it 'raises MapperError with specific message' do
         expect{@query_parser.parse(expr)}.to raise_error(
           JetSet::MapperError,
-          "Entity \"undefined\" is not defined in the mapping. Query:\n#{expr}"
+          'Entity "undefined" is not defined in the mapping.'
         )
       end
     end

@@ -35,6 +35,10 @@ module JetSet
     # Parameters:
     #   +name+:: string
     def get(name)
+      unless @entity_mappings.has_key?(name)
+        raise MapperError, "Entity \"#{name}\" is not defined in the mapping."
+      end
+
       @entity_mappings[name]
     end
   end

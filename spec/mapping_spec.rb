@@ -34,4 +34,17 @@ RSpec.describe JetSet::Mapping do
       end
     end
   end
+
+  describe 'get' do
+    context 'when entity of requested type is not registered' do
+      it 'raises MapperError with specific message' do
+        mapping = JetSet::Mapping.new do
+        end
+
+        expect{
+          mapping.get(:plan)
+        }.to raise_error(JetSet::MapperError, 'Entity "plan" is not defined in the mapping.')
+      end
+    end
+  end
 end
