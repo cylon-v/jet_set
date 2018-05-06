@@ -163,25 +163,53 @@ RSpec.describe 'Entity' do
   describe 'flush' do
     before :each do
       @connection = double(:connection)
+
       @invoices_table = double(:invoices_table)
       allow(@connection).to receive(:[]).with(:invoices).and_return(@invoices_table)
+
+      @subscriptions_table = double(:subscriptions_table)
+      allow(@connection).to receive(:[]).with(:subscriptions).and_return(@subscriptions_table)
+
     end
 
     context 'when it is new' do
       it 'inserts new record into the table' do
         today = Date.today
-        subscription = Subscription.new({active: true})
-        subscription.activate
+        @subscription = Subscription.new({active: true})
+        @subscription.instance_variable_set('@id', 'some-subscription-id')
 
-        @subscriptions_table = double(:subscriptions_table)
-        allow(@connection).to receive(:[]).with(:subscriptions).and_return(@subscriptions_table)
-
-        @entity.instance_variable_set('@amount', 100.0)
+        @entity.instance_variable_set('@subscription', @subscription)
         @entity.instance_variable_set('@created_at', today)
-        @entity.instance_variable_set('@subscription', subscription)
-        expect(@subscriptions_table).to receive(:insert).with(['started_at', 'active'], [today, true]).and_return('some-subscription-id').ordered
+        @entity.instance_variable_set('@amount', 100.0)
         expect(@invoices_table).to receive(:insert).with(['amount', 'created_at', 'subscription_id'], [100.0, today, 'some-subscription-id']).ordered
         @entity.flush(@connection)
+      end
+
+      context 'and it contains weak reference' do
+        it 'does not save it' do
+          @subscription = Subscription.new({active: true})
+          @entity.instance_variable_set('@subscription', @subscription)
+
+          expect(@subscriptions_table).not_to receive(:insert)
+          expect(@invoices_table).to receive(:insert)
+          @entity.flush(@connection)
+        end
+      end
+
+      context 'and it contains strong reference' do
+        before :each do
+          @invoice_history_table = double(:invoice_history_table)
+          allow(@connection).to receive(:[]).with(:invoice_histories).and_return(@invoice_history_table)
+        end
+
+        it 'saves it' do
+          history = InvoiceHistory.new
+          @entity.instance_variable_set('@history', history)
+
+          expect(@invoice_history_table).to receive(:insert)
+          expect(@invoices_table).to receive(:insert)
+          @entity.flush(@connection)
+        end
       end
     end
 

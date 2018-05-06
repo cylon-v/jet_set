@@ -5,7 +5,7 @@ module JetSet
   # Entity mapping is an element of JetSet mapping definition, see +JetSet::Mapping+.
   # Should be instantiated by method +entity+ of +JetSet::Mapping+ instance.
   class EntityMapping
-    attr_reader :references, :collections, :fields, :type, :dependencies
+    attr_reader :references, :collections, :fields, :type, :dependencies, :relations
 
     # Initializes the mapping using Ruby block.
     # Parameters:
@@ -15,7 +15,8 @@ module JetSet
       @type = type
       @references = {}
       @collections = {}
-      @dependencies = []
+      @dependencies = [] # stores only strong dependencies
+      @relations = [] # stores all dependencies
       @fields = ['id']
 
       if block_given?
@@ -42,8 +43,9 @@ module JetSet
         raise MapperError, "Reference \"#{name}\" should have a type. Example:\n reference '#{name}', type: User\n"
       end
 
-      @references[name] = Reference.new(name, params[:type])
+      @references[name] = Reference.new(name, params[:type], params[:weak])
       @dependencies << params[:type] unless params[:weak]
+      @relations << params[:type]
     end
 
     # Defines an attribute-collection of a complex type - another entity defined in the mapping.

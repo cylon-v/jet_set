@@ -64,6 +64,29 @@ RSpec.describe JetSet::Mapper do
 
       @mapper.map(Subscription, row_hash, @session)
     end
+
+    it 'does not map nil associations' do
+      row_hash = {
+        subscription__id: 1,
+        subscription__active: false,
+        plan__id: nil
+      }
+
+      allow(@container).to receive(:resolve).with(:subscription).and_return(@subscription)
+
+      @subscription_entity = double(:subscription_entity)
+      @plan_entity = double(:plan_entity)
+
+      expect(@entity_builder).to receive(:create).with(@subscription).and_return(@subscription_entity)
+      expect(@entity_builder).not_to receive(:create).with(@plan)
+
+      expect(@subscription_entity).to receive(:load_attributes!)
+      expect(@subscription_entity).not_to receive(:set_reference!).with('plan', @plan_entity)
+
+      expect(@session).to receive(:attach).with(@subscription_entity)
+      expect(@session).not_to receive(:attach).with(@plan_entity)
+      @mapper.map(Subscription, row_hash, @session)
+    end
   end
 
   describe 'map_association' do

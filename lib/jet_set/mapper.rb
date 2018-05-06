@@ -37,8 +37,11 @@ module JetSet
 
       row.reference_names.each do |reference_name|
         if entity_mapping.references.key? reference_name.to_sym
-          type = entity_mapping.references[reference_name.to_sym].type
-          entity.set_reference! reference_name, map(type, row_hash, session, reference_name)
+          reference_id_name = reference_name + '__id'
+          unless row_hash[reference_id_name.to_sym].nil?
+            type = entity_mapping.references[reference_name.to_sym].type
+            entity.set_reference! reference_name, map(type, row_hash, session, reference_name)
+          end
         end
       end
 

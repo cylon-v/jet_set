@@ -97,12 +97,16 @@ module JetSet
 
         entity.references.keys.each do |key|
           value = instance_variable_get("@#{key}")
+          reference = entity.references[key]
+
           if value
             reference_id = value.instance_variable_get('@id')
-            if reference_id.nil?
+
+            if reference_id.nil? && !reference.weak?
               @__factory.create(value)
               value.flush(sequel)
             end
+
             set_reference!(key, value)
             fields << "#{key}_id"
 

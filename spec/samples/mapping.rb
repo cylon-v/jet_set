@@ -2,6 +2,7 @@ require 'samples/domain/plan'
 require 'samples/domain/customer'
 require 'samples/domain/subscription'
 require 'samples/domain/invoice'
+require 'samples/domain/invoice_history'
 require 'samples/domain/line_item'
 require 'samples/domain/group'
 
@@ -21,7 +22,11 @@ class Mapping
         field :amount
         field :created_at
         collection :line_items, type: LineItem
-        reference :subscription, type: Subscription
+        reference :subscription, type: Subscription, weak: true
+        reference :history, type: InvoiceHistory
+      end
+
+      entity InvoiceHistory do
       end
 
       entity LineItem do

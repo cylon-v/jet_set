@@ -7,9 +7,15 @@ module JetSet
     # Parameters:
     #   +name+:: name of the attribute
     #   +type+:: class of an entity
-    def initialize(name, type)
+    #   +weak+:: is it weak reference?
+    def initialize(name, type, weak)
       @name = name
       @type = type
+      @weak = weak
+    end
+
+    def weak?
+      @weak
     end
   end
 end
