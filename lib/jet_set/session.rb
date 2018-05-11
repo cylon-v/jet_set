@@ -14,6 +14,7 @@ module JetSet
       @query_parser = query_parser
       @entity_builder = entity_builder
       @dependency_graph = dependency_graph
+      @mutex = Mutex.new
     end
 
     # Fetches root entity using a result of +execute+ method.
@@ -87,9 +88,11 @@ module JetSet
         end
       end
 
-      to_attach.each do |object|
-        obj = object.kind_of?(Entity) ? object : @entity_builder.create(object)
-        @objects << obj
+      @mutex.synchronize do
+        to_attach.each do |object|
+          obj = object.kind_of?(Entity) ? object : @entity_builder.create(object)
+          @objects << obj
+        end
       end
     end
 
