@@ -135,7 +135,7 @@ Do not load your object model just for drawing a views. For showing a results ju
 result = @connection[:user].where(role: 'admin').to_a
 json = JSON.generate(data: result)
 ```   
-In other words, following [CQS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) approach you should 
+In other words, following [CQS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) approach you can 
 load your model for a command but not for a query.
 
 You can find more interesting examples in [JetSet integration tests](https://github.com/cylon-v/jet_set/tree/master/spec/integration).        
