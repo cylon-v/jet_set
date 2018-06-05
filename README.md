@@ -1,9 +1,8 @@
 # JetSet ![Build Status](https://travis-ci.org/cylon-v/jet_set.svg?branch=master)
 
-
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/jet_set`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+JetSet is a data mapping framework for domain-driven developers who think that SQL is the best tool for data querying.
+JetSet is built on top of [Sequel](https://github.com/jeremyevans/sequel) ORM and it's just an abstraction for making 
+the persistence of mapped objects invisible.  
 
 ## Installation
 
@@ -23,7 +22,88 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Initialization
+Open DB connection, see [Sequel docs](https://sequel.jeremyevans.net/rdoc/files/doc/opening_databases_rdoc.html):
+```ruby
+ @connection = Sequel.connect('sqlite:/') # you can connect to any DB supported by Sequel
+```
+
+Create a mapping of your model, a details described [here]:
+```ruby
+class Mapping
+  def self.load_mapping
+    JetSet::map do
+      entity User do
+        field :first_name # reqular field
+        collection :invoices, type: Invoice # "has many" association
+        reference :plan, type: Plan, weak: true # "belongs to" association
+      end
+    end
+  end
+end
+```
+
+Init JetSet environment on start of your application:
+```ruby
+JetSet::init(Mapping.load_mapping, @container)
+```
+
+Open JetSet session:
+```ruby
+@jet_set = JetSet::open_session(@connection)
+```
+For web-applications it's reasonable to bind JetSet session to request lifetime - 
+all modification operations in an MVC action can represent a "Unit of Work".
+
+### Object model tracking and saving
+Create an objects which is described in the mapping:
+```ruby
+user = User.new(first_name: 'Ivan', last_name: 'Ivanov')
+invoice = Invoice.new(created_at: DateTime.now, user: user, amount: 100.0)
+```
+
+Attach them to the session:
+```ruby
+ @session.attach(invoice, user)
+ @session.finalize
+```
+It makes the objects tracked by JetSet.
+
+Finalize the session:
+```ruby
+ @session.finalize
+```
+It saves all added/changed objects to the database.
+
+### Object model loading
+
+```ruby
+user_query = <<~SQL
+  SELECT
+    u.* AS ENTITY user
+  FROM users u
+  LIMIT 1
+SQL
+
+invoices_sql = <<~SQL
+  SELECT
+    i.* AS ENTITY invoice
+  WHERE i.user_id = :user_id
+SQL
+
+customer = @session.fetch(User, user_query) do |user|
+  preload(user, :invoices, invoices_sql, user_id: user.id)
+end
+```
+All loaded objects are already attached to the session and you can perform a changes which will be saved after the session finalization:
+
+```ruby
+customer.invoices[0].apply # changes invoice state
+@session.finalize
+```
+
+You can find more interesting examples in [JetSet integration tests](https://github.com/cylon-v/jet_set/tree/master/spec/integration).        
+Also for the details please visit our [wiki].
 
 ## Development
 
