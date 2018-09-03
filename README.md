@@ -93,7 +93,6 @@ invoice = Invoice.new(created_at: DateTime.now, user: user, amount: 100.0)
 Attach them to the session:
 ```ruby
  @session.attach(invoice, user)
- @session.finalize
 ```
 It makes the objects tracked by JetSet.
 
