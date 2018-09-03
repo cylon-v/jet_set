@@ -6,7 +6,7 @@ module JetSet
   module Entity
     # Loads the entity attributes.
     # Parameters:
-    #   +attributes+:: a hash of attributes in format :field => :value
+    #   +attributes+:: an array of key-pairs in format :field => :value
     def load_attributes!(attributes)
       attributes.each do |attribute|
         name = "@#{attribute[:field]}"

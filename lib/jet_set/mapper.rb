@@ -31,18 +31,24 @@ module JetSet
       entity_name = type.name.underscore.to_sym
       entity_mapping = @mapping.get(entity_name)
       row = Row.new(row_hash, entity_mapping.fields, prefix)
-      object = @container.resolve(entity_name)
-      entity = @entity_builder.create(object)
-      entity.load_attributes!(row.attributes)
 
+      reference_hash = {}
       row.reference_names.each do |reference_name|
         if entity_mapping.references.key? reference_name.to_sym
           reference_id_name = reference_name + '__id'
           unless row_hash[reference_id_name.to_sym].nil?
             type = entity_mapping.references[reference_name.to_sym].type
-            entity.set_reference! reference_name, map(type, row_hash, session, reference_name)
+            reference_hash[reference_name.to_sym] = map(type, row_hash, session, reference_name)
           end
         end
+      end
+
+      object = @container.resolve(entity_name, row.attributes_hash.merge(reference_hash))
+      entity = @entity_builder.create(object)
+      entity.load_attributes!(row.attributes)
+
+      reference_hash.each do |key, value|
+        entity.set_reference! key.to_s, value
       end
 
       session.attach(entity)
