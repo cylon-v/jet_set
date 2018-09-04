@@ -26,7 +26,7 @@ RSpec.describe JetSet::Mapper do
       @subscription = Subscription.new
       @plan = Plan.new
       @customer = Customer.new
-      @group = Group.new
+      @group = Group.new(name: 'My Group')
     end
 
     it 'converts a table row to a type from the mapping' do
@@ -273,8 +273,8 @@ RSpec.describe JetSet::Mapper do
           allow(@customer_entity1).to receive(:id).and_return(1)
           allow(@customer_entity2).to receive(:id).and_return(2)
 
-          @group1 = Group.new
-          @group2 = Group.new
+          @group1 = Group.new(name: 'Group 1')
+          @group2 = Group.new(name: 'Group 2')
           @group_entity1 = double(:group_entity1)
           @group_entity2 = double(:group_entity2)
           allow(@group_entity1).to receive(:id).and_return(21)

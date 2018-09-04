@@ -20,8 +20,8 @@ RSpec.describe 'Many-to-many relationship', integration: true do
 
   describe 'session attach and finalize' do
     it 'successfully saves many-to-many-relationships plain object' do
-      group1 = Group.new
-      group2 = Group.new
+      group1 = Group.new(name: 'Group 1')
+      group2 = Group.new(name: 'Group 2')
       customer1 = Customer.new
       customer2 = Customer.new
 
