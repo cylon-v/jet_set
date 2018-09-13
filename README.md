@@ -28,7 +28,7 @@ Open DB connection, see [Sequel docs](https://sequel.jeremyevans.net/rdoc/files/
  @connection = Sequel.connect('sqlite:/') # you can connect to any DB supported by Sequel
 ```
 
-Create a mapping of your model, a details described [here]:
+Create a mapping of your model, details described [here]:
 ```ruby
 class Mapping
   def self.load_mapping
