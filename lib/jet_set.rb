@@ -3,6 +3,8 @@ require 'sequel'
 require 'sequel/extensions/inflector'
 require 'jet_set/environment'
 require 'jet_set/mapping'
+require 'jet_set/validations'
+require 'jet_set/validation_error'
 require 'jet_set/version'
 
 module JetSet

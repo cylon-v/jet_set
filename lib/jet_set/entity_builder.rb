@@ -1,5 +1,6 @@
 require 'jet_set/mixin/identity'
 require 'jet_set/mixin/entity'
+require 'jet_set/validations'
 
 module JetSet
   # A converter of a pure Ruby object to JetSet trackable object.
@@ -22,6 +23,7 @@ module JetSet
 
       object.extend(Identity)
       object.extend(Entity)
+      object.extend(Validations)
     end
   end
 end

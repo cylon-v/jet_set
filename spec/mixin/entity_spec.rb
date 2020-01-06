@@ -169,7 +169,18 @@ RSpec.describe 'Entity' do
 
       @subscriptions_table = double(:subscriptions_table)
       allow(@connection).to receive(:[]).with(:subscriptions).and_return(@subscriptions_table)
+    end
 
+    context 'when entity responds to "validate" method' do
+      before :each do
+        allow(@entity).to receive(:validate)
+        allow(@invoices_table).to receive(:insert)
+      end
+
+      it 'calls "validate" method' do
+        expect(@entity).to receive(:validate)
+        @entity.flush(@connection)
+      end
     end
 
     context 'when it is new' do

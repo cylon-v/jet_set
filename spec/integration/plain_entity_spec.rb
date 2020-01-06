@@ -3,6 +3,7 @@ require 'sequel'
 require 'logger'
 require 'samples/mapping'
 require 'samples/domain/plan'
+require 'jet_set/validation_error'
 
 RSpec.describe 'Plain entity', integration: true do
   Sequel.extension :migration
@@ -70,6 +71,40 @@ RSpec.describe 'Plain entity', integration: true do
       updated_plan = @session.fetch(Plan, query, plan_name: 'no_plan')
 
       expect(updated_plan.name).to eql('no_plan')
+    end
+  end
+
+  describe 'validation', :focus do
+    context 'of new instance' do
+      context 'when name is invalid' do
+        it 'raises validation error' do
+          plan_to_save = Plan.new(price: 25.0)
+          @session.attach(plan_to_save)
+          expect { @session.finalize }.to raise_error(JetSet::ValidationError)
+        end
+      end
+    end
+
+    context 'of updated instance' do
+      context 'when name is invalid' do
+        it 'raises validation error' do
+          plan_to_save = Plan.new(name: 'my_plan', price: 25.0)
+          @session.attach(plan_to_save)
+          @session.finalize
+
+          query = <<~SQL
+            SELECT
+              p.* AS ENTITY plan
+            FROM plans p
+            WHERE p.name = :plan_name
+            LIMIT 1
+          SQL
+
+          loaded_plan = @session.fetch(Plan, query, plan_name: 'my_plan')
+          loaded_plan.update(name: nil)
+          expect { @session.finalize }.to raise_error(JetSet::ValidationError)
+        end
+      end
     end
   end
 end

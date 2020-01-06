@@ -85,6 +85,8 @@ module JetSet
       entity = @__mapping.get(entity_name)
 
       if new?
+        validate!
+
         attributes = []
         entity.fields.each do |field|
           attributes << {field: field, value: instance_variable_get("@#{field}")}
@@ -113,12 +115,16 @@ module JetSet
             values << value.instance_variable_get('@id')
           end
         end
+
         new_id = table.insert(fields, values)
         @__attributes['@id'] = Attribute.new('@id', new_id)
         @id = new_id
       elsif dirty?
+        validate!(dirty_attributes.map{|attr| attr.name.sub('@', '').to_sym})
+
         attributes = {}
         dirty_attributes.each {|attribute| attributes[attribute.name.sub('@', '')] = instance_variable_get(attribute.name)}
+
         if attributes.keys.length > 0
           table.where(id: @id).update(attributes)
         end

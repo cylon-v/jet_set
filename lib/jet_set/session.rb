@@ -103,9 +103,15 @@ module JetSet
       dirty_objects = @objects.select {|object| object.dirty?}
       ordered_objects = @dependency_graph.order(dirty_objects)
 
-      if ordered_objects.length > 0
-        @sequel.transaction do
-          ordered_objects.each{|obj| obj.flush(@sequel)}
+      begin
+        if ordered_objects.length > 0
+          @sequel.transaction do
+            ordered_objects.each{|obj| obj.flush(@sequel)}
+          end
+        end
+      ensure
+        @mutex.synchronize do
+          @objects = []
         end
       end
     end
