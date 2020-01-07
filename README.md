@@ -158,7 +158,7 @@ i.e. in unit tests, using `validate!` method:
 
 ```ruby
 user = User.new(name: nil)
-user.validate! # throws JetSet::ValidationError
+user.validate! # raises JetSet::ValidationError
 ```
 
 `JetSet::ValidationError` contains details regarding invalid items like:
