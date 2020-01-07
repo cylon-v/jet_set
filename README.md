@@ -137,6 +137,36 @@ json = JSON.generate(data: result)
 In other words, following [CQS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation) approach you can 
 load your model for a command but not for a query.
 
+### Validation
+Simple validation is optional feature provided by JetSet out of the box. To add this to your domain object you just need
+to include module `JetSet::Validations` and use `validate` statements:
+
+```ruby
+require 'jet_set/validations'
+
+class User
+  include JetSet::Validations
+  validate :name, 'cannot be empty', -> (value) {!value.nil? && !value.empty?}
+
+  def initialize(attrs = {})
+    @name = attrs[:name]
+  end
+end
+```
+JetSet uses such validations automatically on saving objects in the database. You also can invoke validation manually,
+i.e. in unit tests, using `validate!` method:
+
+```ruby
+user = User.new(name: nil)
+user.validate! # throws JetSet::ValidationError
+```
+
+`JetSet::ValidationError` contains details regarding invalid items like:
+
+```ruby
+error.invalid_items # => {name: 'cannot be empty'}
+```
+
 You can find more interesting examples in [JetSet integration tests](https://github.com/cylon-v/jet_set/tree/master/spec/integration).        
 Also for the details please visit our [wiki].
 
