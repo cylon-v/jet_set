@@ -1,5 +1,5 @@
 class Plan
-  extend JetSet::Validations
+  include JetSet::Validations
 
   attr_reader :name, :price
   validate :name, 'should not be nil', -> (value) {!value.nil?}

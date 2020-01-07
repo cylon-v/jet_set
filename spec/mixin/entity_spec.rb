@@ -173,12 +173,12 @@ RSpec.describe 'Entity' do
 
     context 'when entity responds to "validate" method' do
       before :each do
-        allow(@entity).to receive(:validate)
+        allow(@entity).to receive(:validate!)
         allow(@invoices_table).to receive(:insert)
       end
 
       it 'calls "validate" method' do
-        expect(@entity).to receive(:validate)
+        expect(@entity).to receive(:validate!)
         @entity.flush(@connection)
       end
     end

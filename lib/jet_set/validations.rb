@@ -3,15 +3,16 @@ require 'jet_set/validation_error'
 module JetSet
   # Optional validation decorator. Adds validation logic to pure Ruby objects.
   module Validations
-    @@validations = {}
-
     # The method checks for methods starting from "validate_" prefix
     # and performs validation for every dirty attribute which has corresponding validation method.
     # Example: for attribute "title" such method would have name "validate_title"
-    def validate!(attributes = @@validations.keys)
+    def validate!(attributes = nil)
+      validations = self.class.class_variable_defined?(:@@validations) ? self.class.class_variable_get(:@@validations) : {}
+      attributes ||= validations.keys
       invalid_items = []
+
       attributes.each do |attribute|
-        attribute_validations = @@validations[attribute] || []
+        attribute_validations = validations[attribute] || []
 
         error = nil
         attribute_validations.each do |validation|
@@ -26,10 +27,25 @@ module JetSet
 
       raise ValidationError.new("#{self.class.name} is invalid", invalid_items) if invalid_items.length > 0
     end
-    
-    def validate(attribute_name, message, func)
-      @@validations[attribute_name] ||= []
-      @@validations[attribute_name] << {func: func, message: message}
+
+    def self.included(base)
+      base.extend(ClassMethods)
+    end
+
+    module ClassMethods
+      # Adds a validation to an attribute of the entity
+      # Parameters:
+      #   +attribute_name+:: attribute name
+      #   +message+:: message that will be shown if given attribute is invalid
+      #   +func+:: boolean proc with a check for validity
+      def validate(attribute_name, message, func)
+        validations = self.class_variable_defined?(:@@validations) ? self.class_variable_get(:@@validations) : {}
+        validations[attribute_name] ||= []
+        validations[attribute_name] << {func: func, message: message}
+        self.class_variable_set(:@@validations, validations)
+      end
     end
   end
+
+
 end

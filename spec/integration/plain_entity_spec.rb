@@ -74,7 +74,7 @@ RSpec.describe 'Plain entity', integration: true do
     end
   end
 
-  describe 'validation', :focus do
+  describe 'validation' do
     context 'of new instance' do
       context 'when name is invalid' do
         it 'raises validation error' do
