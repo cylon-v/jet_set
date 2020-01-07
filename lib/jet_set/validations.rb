@@ -46,6 +46,4 @@ module JetSet
       end
     end
   end
-
-
 end
