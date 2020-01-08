@@ -3,12 +3,10 @@ require 'jet_set/validation_error'
 module JetSet
   # Optional validation decorator. Adds validation logic to pure Ruby objects.
   module Validations
-    # The method checks for methods starting from "validate_" prefix
-    # and performs validation for every dirty attribute which has corresponding validation method.
-    # Example: for attribute "title" such method would have name "validate_title"
-    def validate!(attributes = nil)
+    # The method runs all validations declared in the model
+    def validate!
       validations = self.class.class_variable_defined?(:@@validations) ? self.class.class_variable_get(:@@validations) : {}
-      attributes ||= validations.keys
+      attributes = validations.keys
       invalid_items = []
 
       attributes.each do |attribute|

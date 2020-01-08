@@ -77,6 +77,8 @@ module JetSet
     # Parameters:
     #   +sequel+:: Sequel sequel
     def flush(sequel)
+      validate!
+
       table_name = self.class.name.underscore.pluralize.to_sym
       table = sequel[table_name]
       entity_name = self.class.name.underscore.to_sym
@@ -85,8 +87,6 @@ module JetSet
       entity = @__mapping.get(entity_name)
 
       if new?
-        validate!
-
         attributes = []
         entity.fields.each do |field|
           attributes << {field: field, value: instance_variable_get("@#{field}")}
@@ -120,8 +120,6 @@ module JetSet
         @__attributes['@id'] = Attribute.new('@id', new_id)
         @id = new_id
       elsif dirty?
-        validate!(dirty_attributes.map{|attr| attr.name.sub('@', '').to_sym})
-
         attributes = {}
         dirty_attributes.each {|attribute| attributes[attribute.name.sub('@', '')] = instance_variable_get(attribute.name)}
 
