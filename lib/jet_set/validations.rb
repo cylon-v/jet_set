@@ -33,7 +33,7 @@ module JetSet
     module ClassMethods
       # Adds a validation to an attribute of the entity
       # Parameters:
-      #   +attribute_name+:: attribute name
+      #   +attribute_name+:: +Symbol+ attribute name
       #   +message+:: message that will be shown if given attribute is invalid
       #   +func+:: boolean proc with a check for validity
       def validate(attribute_name, message, func)
@@ -41,6 +41,15 @@ module JetSet
         validations[attribute_name] ||= []
         validations[attribute_name] << {func: func, message: message}
         self.class_variable_set(:@@validations, validations)
+      end
+
+      # Adds a presence validation to an attribute
+      # Parameters:
+      #   +attribute_names+:: array of attribute names to validate
+      def validate_presence(*attribute_names)
+        attribute_names.each do |attribute_name|
+          validate attribute_name, 'cannot be blank', -> (value) {!value.nil? && value != ''}
+        end
       end
     end
   end

@@ -2,24 +2,23 @@ require 'spec_helper'
 
 class ValidatableEntity
   include JetSet::Validations
+  validate_presence :title
 
-  validate :title, 'cannot be nil', -> (value){ !value.nil? }
-
-  def initialize(title)
-    @title = title
+  def initialize(attrs)
+    @title = attrs[:title]
+    @price = attrs[:price]
   end
 end
 
-
 RSpec.describe JetSet::Validations do
   describe 'validate!' do
-    context 'when there is invalid attribute' do
+    context "when there're invalid attributes" do
       it 'raises validation error' do
-        obj = ValidatableEntity.new(nil)
+        obj = ValidatableEntity.new(title: '')
         expect {obj.validate!}
           .to raise_error{|error|
             expect(error).to be_a(JetSet::ValidationError)
-            expect(error.invalid_items).to include({title: 'cannot be nil'})
+            expect(error.invalid_items).to include({title: 'cannot be blank'})
           }
       end
     end
