@@ -65,7 +65,7 @@ module JetSet
           boolean: -> (value) {!!value == value}
         }
 
-        validate attribute_name, "should be #{type}", -> (value) {!value.nil? && checks[type].call(value)}
+        validate attribute_name, "should be #{type}", -> (value) {value.nil? || checks[type].call(value)}
       end
     end
   end
