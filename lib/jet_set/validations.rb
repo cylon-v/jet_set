@@ -49,6 +49,24 @@ module JetSet
       def validate_presence(attribute_name)
         validate attribute_name, 'cannot be blank', -> (value) {!value.nil? && value != ''}
       end
+
+      # Adds type validation to string attribute
+      # Parameters:
+      #   +attribute_name+:: an attribute name to validate
+      #   +type+:: a type to check, possible values - :numeric|:string|:boolean
+      def validate_type(attribute_name, type)
+        unless [:numeric, :string, :boolean].include?(type)
+          raise ValidationDefinitionError, "the type should be :numeric, :string or :boolean"
+        end
+
+        checks = {
+          numeric: -> (value) {value.is_a?(Numeric)},
+          string: -> (value) {value.is_a?(String)},
+          boolean: -> (value) {!!value == value}
+        }
+
+        validate attribute_name, "should be #{type}", -> (value) {!value.nil? && checks[type].call(value)}
+      end
     end
   end
 end
