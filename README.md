@@ -172,7 +172,6 @@ error.invalid_items # => {name: 'cannot be empty'}
 
 
 You can find more interesting examples in [JetSet integration tests](https://github.com/cylon-v/jet_set/tree/master/spec/integration).        
-Also for the details please visit our [wiki].
 
 ## Development
 
