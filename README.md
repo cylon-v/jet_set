@@ -147,13 +147,15 @@ require 'jet_set/validations'
 class User
   include JetSet::Validations
   validate :name, 'cannot be empty', -> (value) {!value.nil? && !value.empty?}
+  validate :email, type: :string, presence: true
+  validate :email, 'should be valid email address', -> (value) {value.match(...)}
 
   def initialize(attrs = {})
     @name = attrs[:name]
   end
 end
 ```
-JetSet uses such validations automatically on saving objects in the database. You also can invoke validation manually,
+JetSet uses such validations automatically on saving objects in the database. Also you can invoke validation manually,
 i.e. in unit tests, using `validate!` method:
 
 ```ruby
@@ -166,6 +168,8 @@ user.validate! # raises JetSet::ValidationError
 ```ruby
 error.invalid_items # => {name: 'cannot be empty'}
 ```
+
+
 
 You can find more interesting examples in [JetSet integration tests](https://github.com/cylon-v/jet_set/tree/master/spec/integration).        
 Also for the details please visit our [wiki].
