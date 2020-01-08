@@ -45,11 +45,9 @@ module JetSet
 
       # Adds a presence validation to an attribute
       # Parameters:
-      #   +attribute_names+:: array of attribute names to validate
-      def validate_presence(*attribute_names)
-        attribute_names.each do |attribute_name|
-          validate attribute_name, 'cannot be blank', -> (value) {!value.nil? && value != ''}
-        end
+      #   +attribute_name+:: an attribute name to validate
+      def validate_presence(attribute_name)
+        validate attribute_name, 'cannot be blank', -> (value) {!value.nil? && value != ''}
       end
     end
   end
