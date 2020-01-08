@@ -34,27 +34,44 @@ module JetSet
       # Adds a validation to an attribute of the entity
       # Parameters:
       #   +attribute_name+:: +Symbol+ attribute name
-      #   +message+:: message that will be shown if given attribute is invalid
+      #   +options+ || +message+:: validation options {type, presence, message, custom} or just a message
       #   +func+:: boolean proc with a check for validity
-      def validate(attribute_name, message, func)
+      def validate(attribute_name, options, func = nil)
         validations = self.class_variable_defined?(:@@validations) ? self.class_variable_get(:@@validations) : {}
         validations[attribute_name] ||= []
-        validations[attribute_name] << {func: func, message: message}
+
+        if options.is_a?(Hash)
+          if options.has_key?(:type)
+            validations[attribute_name] << validate_type(options[:type])
+          end
+
+          if options[:presence] == true
+            validations[attribute_name] << validate_presence
+          end
+
+          message = options[:message]
+        elsif options.is_a?(String)
+          message = options
+        else
+          raise ValidationDefinitionError, "Validation definition of attribute #{attribute_name} is incorrect."
+        end
+
+        func ||= options[:custom]
+
+        unless func.nil?
+          validations[attribute_name] << {func: func, message: message}
+        end
+
         self.class_variable_set(:@@validations, validations)
       end
 
-      # Adds a presence validation to an attribute
-      # Parameters:
-      #   +attribute_name+:: an attribute name to validate
-      def validate_presence(attribute_name)
-        validate attribute_name, 'cannot be blank', -> (value) {!value.nil? && value != ''}
+      private
+
+      def validate_presence
+        {message: 'cannot be blank', func: -> (value) {!value.nil? && value != ''}}
       end
 
-      # Adds type validation to string attribute
-      # Parameters:
-      #   +attribute_name+:: an attribute name to validate
-      #   +type+:: a type to check, possible values - :numeric|:string|:boolean
-      def validate_type(attribute_name, type)
+      def validate_type(type)
         unless [:numeric, :string, :boolean].include?(type)
           raise ValidationDefinitionError, "the type should be :numeric, :string or :boolean"
         end
@@ -65,7 +82,7 @@ module JetSet
           boolean: -> (value) {!!value == value}
         }
 
-        validate attribute_name, "should be #{type}", -> (value) {value.nil? || checks[type].call(value)}
+        {message: "should be #{type}", func: -> (value) {value.nil? || checks[type].call(value)}}
       end
     end
   end
