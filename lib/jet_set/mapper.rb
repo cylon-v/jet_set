@@ -43,6 +43,7 @@ module JetSet
         end
       end
 
+      p entity_name
       object = @container.resolve(entity_name, row.attributes_hash.merge(reference_hash))
       entity = @entity_builder.create(object)
       entity.load_attributes!(row.attributes)
