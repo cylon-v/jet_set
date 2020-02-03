@@ -39,9 +39,9 @@ RSpec.describe JetSet::Mapper do
         customer__first_name: 'Alex'
       }
 
-      allow(@container).to receive(:resolve).with(:subscription, hash_including({id: 1, active: false})).and_return(@subscription)
-      allow(@container).to receive(:resolve).with(:plan, hash_including({id: 2, price: 100.0})).and_return(@plan)
-      allow(@container).to receive(:resolve).with(:customer, hash_including({id: 3, first_name: 'Alex'})).and_return(@customer)
+      allow(@container).to receive(:resolve).with(:jet_set__subscription, hash_including({id: 1, active: false})).and_return(@subscription)
+      allow(@container).to receive(:resolve).with(:jet_set__plan, hash_including({id: 2, price: 100.0})).and_return(@plan)
+      allow(@container).to receive(:resolve).with(:jet_set__customer, hash_including({id: 3, first_name: 'Alex'})).and_return(@customer)
 
       @subscription_entity = double(:subscription_entity)
       @plan_entity = double(:plan_entity)
@@ -72,7 +72,7 @@ RSpec.describe JetSet::Mapper do
         plan__id: nil
       }
 
-      allow(@container).to receive(:resolve).with(:subscription, {id: 1, active: false}).and_return(@subscription)
+      allow(@container).to receive(:resolve).with(:jet_set__subscription, {id: 1, active: false}).and_return(@subscription)
 
       @subscription_entity = double(:subscription_entity)
       @plan_entity = double(:plan_entity)
@@ -107,13 +107,13 @@ RSpec.describe JetSet::Mapper do
         allow(@invoice_entity).to receive(:class).and_return(Invoice)
 
         expect(@container).to receive(:resolve)
-                                .with(:line_item, hash_including({id: 1, price: 100.0, quantity: 1}))
+                                .with(:jet_set__line_item, hash_including({id: 1, price: 100.0, quantity: 1}))
                                 .and_return(@line_item1)
         expect(@container).to receive(:resolve)
-                                .with(:line_item, hash_including({id: 2, price: 50.0, quantity: 1}))
+                                .with(:jet_set__line_item, hash_including({id: 2, price: 50.0, quantity: 1}))
                                 .and_return(@line_item2)
 
-        expect(@container).to receive(:resolve).with(:invoice, {id: 30}).and_return(@invoice).twice
+        expect(@container).to receive(:resolve).with(:jet_set__invoice, {id: 30}).and_return(@invoice).twice
 
         expect(@entity_builder).to receive(:create).with(@line_item1).and_return(@line_item_entity1)
         expect(@entity_builder).to receive(:create).with(@line_item2).and_return(@line_item_entity2)
@@ -174,13 +174,13 @@ RSpec.describe JetSet::Mapper do
           allow(@invoice_entity1).to receive(:class).and_return(Invoice)
           allow(@invoice_entity2).to receive(:class).and_return(Invoice)
 
-          allow(@container).to receive(:resolve).with(:invoice).and_return(@invoice1)
-          allow(@container).to receive(:resolve).with(:invoice).and_return(@invoice2)
+          allow(@container).to receive(:resolve).with(:jet_set__invoice).and_return(@invoice1)
+          allow(@container).to receive(:resolve).with(:jet_set__invoice).and_return(@invoice2)
         end
 
         context 'when reverse id is not defined' do
           it 'raises MapperError with specific message' do
-            expect(@container).to receive(:resolve).with(:line_item, {id: 1, price: 100.0, quantity: 1}).and_return(@line_item1)
+            expect(@container).to receive(:resolve).with(:jet_set__line_item, {id: 1, price: 100.0, quantity: 1}).and_return(@line_item1)
 
             allow(@entity_builder).to receive(:create).with(@line_item1).and_return(@line_item_entity1)
             allow(@entity_builder).to receive(:create).with(@line_item2).and_return(@line_item_entity2)
@@ -216,8 +216,8 @@ RSpec.describe JetSet::Mapper do
         end
 
         it 'adds a complex association to the array of targets' do
-          expect(@container).to receive(:resolve).with(:line_item, {id: 1, price: 100.0, quantity: 1}).and_return(@line_item1)
-          expect(@container).to receive(:resolve).with(:line_item, {id: 2, price: 50.0, quantity: 1}).and_return(@line_item2,)
+          expect(@container).to receive(:resolve).with(:jet_set__line_item, {id: 1, price: 100.0, quantity: 1}).and_return(@line_item1)
+          expect(@container).to receive(:resolve).with(:jet_set__line_item, {id: 2, price: 50.0, quantity: 1}).and_return(@line_item2,)
 
           expect(@entity_builder).to receive(:create).with(@line_item1).and_return(@line_item_entity1)
           expect(@entity_builder).to receive(:create).with(@line_item2).and_return(@line_item_entity2)
@@ -280,13 +280,13 @@ RSpec.describe JetSet::Mapper do
           allow(@group_entity1).to receive(:id).and_return(21)
           allow(@group_entity2).to receive(:id).and_return(22)
 
-          allow(@container).to receive(:resolve).with(:customer).and_return(@customer1)
-          allow(@container).to receive(:resolve).with(:customer).and_return(@customer2)
+          allow(@container).to receive(:resolve).with(:jet_set__customer).and_return(@customer1)
+          allow(@container).to receive(:resolve).with(:jet_set__customer).and_return(@customer2)
         end
 
         it 'adds a complex association to the array of targets' do
-          expect(@container).to receive(:resolve).with(:group, {id: 21}).and_return(@group1)
-          expect(@container).to receive(:resolve).with(:group, {id: 22}).and_return(@group2)
+          expect(@container).to receive(:resolve).with(:jet_set__group, {id: 21}).and_return(@group1)
+          expect(@container).to receive(:resolve).with(:jet_set__group, {id: 22}).and_return(@group2)
 
           expect(@entity_builder).to receive(:create).with(@group1).and_return(@group_entity1)
           expect(@entity_builder).to receive(:create).with(@group2).and_return(@group_entity2)

@@ -52,7 +52,6 @@ RSpec.describe 'Nested entity', integration: true do
           li.* AS ENTITY line_item,
           li.invoice_id
         FROM line_items li
-
         WHERE li.invoice_id IN :invoice_ids
       SQL
 

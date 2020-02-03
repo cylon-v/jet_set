@@ -15,7 +15,8 @@ module JetSet
       @container = container
 
       @mapping.entity_mappings.values.each do |entity_mapping|
-        container.register(entity_mapping.type)
+        entity_name = "jet_set__#{entity_mapping.type.name.underscore}".to_sym
+        container.register(entity_mapping.type, entity_name)
       end
     end
 
@@ -29,6 +30,7 @@ module JetSet
     #       "SELECT u.name AS customer__name from users u"
     def map(type, row_hash, session, prefix = type.name.underscore)
       entity_name = type.name.underscore.to_sym
+      resolve_name = "jet_set__#{type.name.underscore}".to_sym
       entity_mapping = @mapping.get(entity_name)
       row = Row.new(row_hash, entity_mapping.fields, prefix)
 
@@ -43,8 +45,7 @@ module JetSet
         end
       end
 
-      p entity_name
-      object = @container.resolve(entity_name, row.attributes_hash.merge(reference_hash))
+      object = @container.resolve(resolve_name, row.attributes_hash.merge(reference_hash))
       entity = @entity_builder.create(object)
       entity.load_attributes!(row.attributes)
 
