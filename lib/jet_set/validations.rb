@@ -6,7 +6,7 @@ module JetSet
     # The method runs all validations declared in the model
     def validate!
       validations = self.class.class_variable_defined?(:@@validations) ? self.class.class_variable_get(:@@validations) : {}
-      attributes = validations.keys
+      attributes = validations.keys - @to_skip
       invalid_items = []
 
       attributes.each do |attribute|
@@ -24,6 +24,11 @@ module JetSet
       end
 
       raise ValidationError.new("#{self.class.name} is invalid", invalid_items) if invalid_items.length > 0
+    end
+
+    def do_not_validate(attribute_name)
+      @to_skip ||= []
+      @to_skip << attribute_name
     end
 
     def self.included(base)
