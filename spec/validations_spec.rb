@@ -36,9 +36,16 @@ RSpec.describe JetSet::Validations do
     context 'when all attributes are valid' do
       it 'doesn\'t raise validation error' do
         obj = ValidatableEntity.new(title: 'Title: Cool name', price: 10.0, done: true)
-        expect {obj.validate!}
-          .not_to raise_error
+        expect {obj.validate!}.not_to raise_error
       end
+    end
+  end
+
+  describe 'do_not_validate' do
+    it 'skips further validation of the field' do
+      obj = ValidatableEntity.new(title: '', price: 12.0, done: true)
+      obj.do_not_validate(:title)
+      expect {obj.validate!}.not_to raise_error
     end
   end
 
