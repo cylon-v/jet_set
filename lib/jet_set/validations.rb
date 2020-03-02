@@ -29,9 +29,9 @@ module JetSet
     end
 
     # Disables attribute validation for edge cases
-    def do_not_validate(attribute_name)
+    def do_not_validate(*attributes)
       @to_skip ||= []
-      @to_skip << attribute_name
+      attributes.each { |a| @to_skip << a}
     end
 
     def self.included(base)
