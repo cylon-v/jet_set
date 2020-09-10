@@ -200,6 +200,17 @@ RSpec.describe JetSet::Session do
       end
     end
 
+    context 'when entity responds to "validate" method' do
+      before :each do
+        allow(@entity).to receive(:validate!)
+      end
+
+      it 'calls "validate" method' do
+        expect(@entity).to receive(:validate!)
+        @session.attach(@entity)
+      end
+    end
+
     context 'when object is a pure Ruby object' do
       it 'converts it to an entity and then adds to the session' do
         plan = Plan.new

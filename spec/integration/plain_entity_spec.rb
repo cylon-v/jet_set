@@ -79,8 +79,7 @@ RSpec.describe 'Plain entity', integration: true do
       context 'when name is invalid' do
         it 'raises validation error' do
           plan_to_save = Plan.new(price: 25.0)
-          @session.attach(plan_to_save)
-          expect { @session.finalize }.to raise_error(JetSet::ValidationError)
+          expect { @session.attach(plan_to_save) }.to raise_error(JetSet::ValidationError)
         end
       end
     end

@@ -77,6 +77,8 @@ module JetSet
     # Parameters:
     #   +sequel+:: Sequel sequel
     def flush(sequel)
+      validate! if respond_to? :validate!
+
       table_name = self.class.name.underscore.pluralize.to_sym
       table = sequel[table_name]
       entity_name = self.class.name.underscore.to_sym
