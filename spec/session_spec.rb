@@ -187,25 +187,30 @@ RSpec.describe JetSet::Session do
 
   describe 'attach' do
     before :each do
+      @object = double(:object)
       @entity = double(:entity)
-      allow(@entity).to receive(:kind_of?).with(JetSet::Entity).and_return(true)
     end
 
     context 'when object is an entity' do
-      it 'just adds it to the session' do
-        expect(@entity_builder).to_not receive(:create).with(@entity)
+      before :each do
+        allow(@object).to receive(:kind_of?).with(JetSet::Entity).and_return(true)
+      end
 
-        @session.attach(@entity)
-        expect(@session.instance_variable_get('@objects')).to include(@entity)
+      it 'just adds it to the session' do
+        expect(@entity_builder).to_not receive(:create).with(@object)
+
+        @session.attach(@object)
+        expect(@session.instance_variable_get('@objects')).to include(@object)
       end
     end
 
-    context 'when entity responds to "validate" method' do
+    context 'when obj responds to "validate" method and object is not yet an entity' do
       before :each do
-        allow(@entity).to receive(:validate!)
+        allow(@object).to receive(:kind_of?).with(JetSet::Entity).and_return(false)
       end
 
       it 'calls "validate" method' do
+        expect(@entity_builder).to receive(:create).and_return(@entity)
         expect(@entity).to receive(:validate!)
         @session.attach(@entity)
       end
@@ -239,6 +244,7 @@ RSpec.describe JetSet::Session do
         expect(@entity_builder).to receive(:create).with(plan2).and_return(plan2_entity)
         expect(@entity_builder).to receive(:create).with(customer1).and_return(customer1_entity)
         expect(@entity_builder).to receive(:create).with(customer2).and_return(customer2_entity)
+        expect(@entity_builder).to receive(:create).with(@entity).and_return(@entity)
 
         @session.attach(plan1, plan2, [customer1, customer2], @entity)
         expect(@session.instance_variable_get('@objects'))

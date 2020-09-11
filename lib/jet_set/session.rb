@@ -90,8 +90,13 @@ module JetSet
 
       @mutex.synchronize do
         to_attach.each do |object|
-          obj = object.kind_of?(Entity) ? object : @entity_builder.create(object)
-          obj.validate! if obj.respond_to? :validate!
+          if object.kind_of?(Entity)
+            obj = object
+          else
+            obj = @entity_builder.create(object)
+            obj.validate! if obj.respond_to? :validate!
+          end
+
           @objects << obj
         end
       end
